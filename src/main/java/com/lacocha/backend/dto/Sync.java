@@ -1,0 +1,58 @@
+package com.lacocha.backend.dto;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.lacocha.backend.dto.Catalogo.EstanqueSalida;
+import com.lacocha.backend.dto.Catalogo.EstanqueSync;
+import com.lacocha.backend.dto.Catalogo.LoteSalida;
+import com.lacocha.backend.dto.Catalogo.LoteSync;
+import com.lacocha.backend.modelo.Alerta;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public final class Sync {
+
+    private Sync() {
+    }
+
+    public record PushPeticion(
+            @NotBlank @Size(max = 64) String dispositivoId,
+            @Valid @Size(max = 200) List<EstanqueSync> estanques,
+            @Valid @Size(max = 200) List<LoteSync> lotes,
+            // Se validan uno por uno en el servicio: un evento malo no debe bloquear la cola del celular
+            @Size(max = 500) List<JsonNode> eventos) {
+    }
+
+    public record Rechazo(String id, String error) {
+    }
+
+    public record PushRespuesta(
+            List<UUID> aceptados,
+            List<UUID> duplicados,
+            List<UUID> obsoletos,
+            List<Rechazo> rechazados,
+            int alertasGeneradas,
+            Instant servidorEn) {
+    }
+
+    public record AlertaSalida(UUID id, UUID estanqueId, UUID lecturaId, String variable, Double valor,
+            String nivel, String mensaje, Instant medidoEn, boolean atendida) {
+
+        public static AlertaSalida de(Alerta a) {
+            return new AlertaSalida(a.getId(), a.getEstanqueId(), a.getLecturaId(), a.getVariable(), a.getValor(),
+                    a.getNivel(), a.getMensaje(), a.getMedidoEn(), a.isAtendida());
+        }
+    }
+
+    public record PullRespuesta(
+            List<EstanqueSalida> estanques,
+            List<LoteSalida> lotes,
+            List<AlertaSalida> alertasPendientes,
+            Instant servidorEn) {
+    }
+}

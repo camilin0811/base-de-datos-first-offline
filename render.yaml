@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: lacocha-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /salud
+    envVars:
+      # Se llenan a mano en el panel de Render (sync: false) para que un push no los sobrescriba
+      - key: DATABASE_URL
+        sync: false
+      - key: API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false

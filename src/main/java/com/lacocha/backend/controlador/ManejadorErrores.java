@@ -1,0 +1,42 @@
+package com.lacocha.backend.controlador;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.server.ResponseStatusException;
+
+/** Todos los errores salen como {"detalle": "..."} para que la app los muestre igual. */
+@RestControllerAdvice
+public class ManejadorErrores {
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> estado(ResponseStatusException ex) {
+        return ResponseEntity.status(ex.getStatusCode()).body(Map.of("detalle", String.valueOf(ex.getReason())));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> validacion(MethodArgumentNotValidException ex) {
+        String detalle = ex.getBindingResult().getFieldErrors().stream()
+                .map(e -> e.getField() + ": " + e.getDefaultMessage())
+                .sorted()
+                .collect(Collectors.joining("; "));
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("detalle", detalle));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> jsonInvalido(HttpMessageNotReadableException ex) {
+        return ResponseEntity.badRequest().body(Map.of("detalle", "El cuerpo no es un JSON válido o tiene campos con formato incorrecto"));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, String>> parametro(MethodArgumentTypeMismatchException ex) {
+        return ResponseEntity.badRequest().body(Map.of("detalle", ex.getName() + ": formato no válido"));
+    }
+}
