@@ -250,6 +250,22 @@ class ApiTest {
     }
 
     @Test
+    void listaLosDispositivosQueSincronizan() throws Exception {
+        crearCatalogo();
+        JsonNode lista = llamar(get("/api/dispositivos"), 200);
+
+        JsonNode cel = null;
+        for (JsonNode d : lista) {
+            if (d.get("id").asText().equals("cel-1")) {
+                cel = d;
+            }
+        }
+        assertThat(cel).isNotNull();
+        assertThat(cel.get("activo").asBoolean()).isTrue();
+        assertThat(cel.get("ultimo_visto_en").asText()).isNotEmpty();
+    }
+
+    @Test
     void unDispositivoDadoDeBajaNoPuedeSincronizar() throws Exception {
         String celular = "cel-dado-de-baja";
         Map<String, Object> cuerpo = mapa("dispositivo_id", celular, "eventos", List.of());
