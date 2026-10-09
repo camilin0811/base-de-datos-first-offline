@@ -256,6 +256,25 @@ class ApiTest {
     }
 
     @Test
+    void listarLotesFiltraPorEstanqueYPorEstado() throws Exception {
+        String[] cat = crearCatalogo();
+        String estanque = cat[0];
+        String otroLote = nuevoId();
+        push(mapa("lotes", List.of(mapa("id", otroLote, "estanque_id", estanque, "codigo", "A01",
+                "cantidad_inicial", 300, "estado", "cerrado", "actualizado_en", hace(30)))));
+
+        // Solo los de este estanque, ordenados por codigo: A01 antes que L12
+        JsonNode delEstanque = llamar(get("/api/lotes").param("estanque_id", estanque), 200);
+        assertThat(delEstanque).hasSize(2);
+        assertThat(delEstanque.get(0).get("codigo").asText()).isEqualTo("A01");
+        assertThat(delEstanque.get(1).get("codigo").asText()).isEqualTo("L12");
+
+        JsonNode cerrados = llamar(get("/api/lotes").param("estanque_id", estanque).param("estado", "cerrado"), 200);
+        assertThat(cerrados).hasSize(1);
+        assertThat(cerrados.get(0).get("id").asText()).isEqualTo(otroLote);
+    }
+
+    @Test
     void cerrarYReabrirUnLoteManejaLaFechaDeCierre() throws Exception {
         String lote = crearCatalogo()[1];
         assertThat(llamar(get("/api/lotes").param("estanque_id", crearCatalogo()[0]), 200)).isNotNull();

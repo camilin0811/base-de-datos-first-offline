@@ -22,6 +22,7 @@ import com.lacocha.backend.repositorio.EstanqueRepository;
 import com.lacocha.backend.repositorio.LoteRepository;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 
 @Service
 public class CatalogoService {
@@ -68,13 +69,21 @@ public class CatalogoService {
     }
 
     @Transactional(readOnly = true)
+    /**
+     * Filtra y ordena en la base. Antes traia todos los lotes de la finca a memoria para
+     * descartarlos con streams: con un estanque_id dado, la base responde leyendo solo la
+     * parte del indice que corresponde a ese estanque.
+     */
     public List<LoteSalida> listarLotes(UUID estanqueId, String estado) {
-        return lotes.findAll().stream()
-                .filter(l -> estanqueId == null || l.getEstanqueId().equals(estanqueId))
-                .filter(l -> estado == null || l.getEstado().equals(estado))
-                .sorted((a, b) -> a.getCodigo().compareTo(b.getCodigo()))
-                .map(LoteSalida::de)
-                .toList();
+        StringBuilder jpql = new StringBuilder("select l from Lote l where 1 = 1");
+        if (estanqueId != null) jpql.append(" and l.estanqueId = :estanque");
+        if (estado != null) jpql.append(" and l.estado = :estado");
+        jpql.append(" order by l.codigo asc");
+
+        TypedQuery<Lote> consulta = em.createQuery(jpql.toString(), Lote.class);
+        if (estanqueId != null) consulta.setParameter("estanque", estanqueId);
+        if (estado != null) consulta.setParameter("estado", estado);
+        return consulta.getResultList().stream().map(LoteSalida::de).toList();
     }
 
     @Transactional
