@@ -24,6 +24,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lacocha.backend.modelo.Dispositivo;
+import com.lacocha.backend.repositorio.DispositivoRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -39,6 +41,9 @@ class ApiTest {
 
     @Autowired
     ObjectMapper mapper;
+
+    @Autowired
+    DispositivoRepository dispositivos;
 
     // ---------- utilidades ----------
 
@@ -226,6 +231,22 @@ class ApiTest {
         assertThat(alertas.get(0).get("nivel").asText()).isEqualTo("advertencia");
         llamar(post("/api/alertas/" + alertas.get(0).get("id").asText() + "/atender"), 200);
         assertThat(llamar(get("/api/alertas").param("estanque_id", estanque), 200)).isEmpty();
+    }
+
+    @Test
+    void elPushRegistraElDispositivoYActualizaCuandoLoVio() throws Exception {
+        String[] cat = crearCatalogo();
+        Dispositivo primero = dispositivos.findById("cel-1").orElseThrow();
+        assertThat(primero.isActivo()).isTrue();
+        assertThat(primero.getPrimerVistoEn()).isNotNull();
+
+        pushEventos(mapa("tipo", "mortalidad", "id", nuevoId(), "lote_id", cat[1],
+                "cantidad", 1, "registrado_en", hace(1)));
+
+        Dispositivo despues = dispositivos.findById("cel-1").orElseThrow();
+        // primer_visto_en no se mueve; ultimo_visto_en avanza con cada envio
+        assertThat(despues.getPrimerVistoEn()).isEqualTo(primero.getPrimerVistoEn());
+        assertThat(despues.getUltimoVistoEn()).isAfterOrEqualTo(primero.getUltimoVistoEn());
     }
 
     @Test

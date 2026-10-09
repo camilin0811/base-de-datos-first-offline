@@ -28,10 +28,12 @@ import com.lacocha.backend.dto.Sync.PushPeticion;
 import com.lacocha.backend.dto.Sync.PushRespuesta;
 import com.lacocha.backend.dto.Sync.Rechazo;
 import com.lacocha.backend.modelo.Alerta;
+import com.lacocha.backend.modelo.Dispositivo;
 import com.lacocha.backend.modelo.Estanque;
 import com.lacocha.backend.modelo.Evento;
 import com.lacocha.backend.modelo.Lote;
 import com.lacocha.backend.repositorio.AlertaRepository;
+import com.lacocha.backend.repositorio.DispositivoRepository;
 import com.lacocha.backend.repositorio.EstanqueRepository;
 import com.lacocha.backend.repositorio.LoteRepository;
 
@@ -53,15 +55,18 @@ public class SyncService {
     private final EstanqueRepository estanques;
     private final LoteRepository lotes;
     private final AlertaRepository alertas;
+    private final DispositivoRepository dispositivos;
     private final ObjectMapper mapper;
     private final Validator validator;
 
     public SyncService(EntityManager em, EstanqueRepository estanques, LoteRepository lotes,
-            AlertaRepository alertas, ObjectMapper mapper, Validator validator) {
+            AlertaRepository alertas, DispositivoRepository dispositivos, ObjectMapper mapper,
+            Validator validator) {
         this.em = em;
         this.estanques = estanques;
         this.lotes = lotes;
         this.alertas = alertas;
+        this.dispositivos = dispositivos;
         this.mapper = mapper;
         this.validator = validator;
     }
@@ -85,6 +90,7 @@ public class SyncService {
     public PushRespuesta push(PushPeticion peticion) {
         Instant servidorEn = Instant.now();
         Resultado r = new Resultado();
+        registrarDispositivo(peticion.dispositivoId(), servidorEn);
 
         for (EstanqueSync e : lista(peticion.estanques())) {
             String error = Fechas.errorFechaDispositivo(e.actualizadoEn());
@@ -217,6 +223,29 @@ public class SyncService {
                 listaLotes.stream().map(LoteSalida::de).toList(),
                 alertas.findTop100ByAtendidaFalseOrderByMedidoEnDesc().stream().map(AlertaSalida::de).toList(),
                 servidorEn);
+    }
+
+    /**
+     * Deja constancia del celular que esta sincronizando y actualiza su ultimo_visto_en.
+     *
+     * Va antes de guardar los eventos porque dispositivo_id es llave foranea: si el
+     * dispositivo no existe todavia, el INSERT del evento no pasaria. El flush asegura que
+     * la fila este en la base antes de que empiecen a entrar los eventos.
+     */
+    private void registrarDispositivo(String id, Instant ahora) {
+        Dispositivo dispositivo = dispositivos.findById(id).orElse(null);
+        if (dispositivo == null) {
+            dispositivo = new Dispositivo();
+            dispositivo.setId(id);
+            dispositivo.setPrimerVistoEn(ahora);
+            dispositivo.setUltimoVistoEn(ahora);
+            // Los campos van completos antes del persist: Hibernate copia el estado de la
+            // entidad en ese momento y no vuelve a leerlo al hacer el flush.
+            em.persist(dispositivo);
+        } else {
+            dispositivo.setUltimoVistoEn(ahora);
+        }
+        em.flush();
     }
 
     /**
