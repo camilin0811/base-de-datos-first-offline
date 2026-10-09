@@ -146,6 +146,34 @@ class ApiTest {
     }
 
     @Test
+    void losParametrosDelSistemaExpertoSeConsultanConSuFuente() throws Exception {
+        JsonNode r = llamar(get("/api/parametros"), 200);
+
+        assertThat(r.get("rangos")).hasSize(3);
+        assertThat(r.get("tasas_alimentacion")).hasSize(5);
+        assertThat(r.get("factores_temperatura")).hasSize(5);
+
+        JsonNode temperatura = null;
+        for (JsonNode rango : r.get("rangos")) {
+            if (rango.get("variable").asText().equals("temp_c")) {
+                temperatura = rango;
+            }
+        }
+        assertThat(temperatura).isNotNull();
+        assertThat(temperatura.get("optimo_min").asDouble()).isEqualTo(10.0);
+        assertThat(temperatura.get("optimo_max").asDouble()).isEqualTo(16.0);
+        // Hoy la fuente avisa que el valor todavia no esta citado
+        assertThat(temperatura.get("fuente").asText()).contains("sin citar");
+
+        // El oxigeno no tiene tope por arriba: en la base es NULL
+        for (JsonNode rango : r.get("rangos")) {
+            if (rango.get("variable").asText().equals("oxigeno_mg_l")) {
+                assertThat(rango.get("optimo_max").isNull()).isTrue();
+            }
+        }
+    }
+
+    @Test
     void cambiarElUmbralEnLaBaseCambiaLasAlertas() throws Exception {
         String estanque = crearCatalogo()[0];
         Map<String, Object> lectura = mapa("tipo", "lectura_agua", "id", nuevoId(), "estanque_id", estanque,
