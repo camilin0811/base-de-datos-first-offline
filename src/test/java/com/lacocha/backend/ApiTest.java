@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -27,6 +28,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lacocha.backend.modelo.Dispositivo;
 import com.lacocha.backend.repositorio.DispositivoRepository;
+import com.lacocha.backend.servicio.Reglas;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -45,6 +47,12 @@ class ApiTest {
 
     @Autowired
     DispositivoRepository dispositivos;
+
+    @Autowired
+    JdbcTemplate jdbc;
+
+    @Autowired
+    Reglas reglas;
 
     // ---------- utilidades ----------
 
@@ -135,6 +143,29 @@ class ApiTest {
         assertThat(alertas.get(0).get("nivel").asText()).isEqualTo("critica");
         assertThat(alertas.get(0).get("variable").asText()).isEqualTo("temp_c");
         assertThat(alertas.get(0).get("mensaje").asText()).isEqualTo("Temperatura alta: 19 °C (óptimo 10–16 °C)");
+    }
+
+    @Test
+    void cambiarElUmbralEnLaBaseCambiaLasAlertas() throws Exception {
+        String estanque = crearCatalogo()[0];
+        Map<String, Object> lectura = mapa("tipo", "lectura_agua", "id", nuevoId(), "estanque_id", estanque,
+                "temp_c", 19.0, "origen", "sensor", "registrado_en", hace(5));
+
+        // Con el umbral cargado por V17, 19 °C esta fuera de rango y genera alerta
+        assertThat(pushEventos(lectura).get("alertas_generadas").asInt()).isEqualTo(1);
+
+        try {
+            // El productor decide que su cultivo aguanta hasta 20 °C: es un UPDATE, no un redespliegue
+            jdbc.update("update parametros_rango set optimo_max = 20, critico_max = 22 where variable = 'temp_c'");
+            reglas.recargar();
+
+            Map<String, Object> otra = new HashMap<>(lectura);
+            otra.put("id", nuevoId());
+            assertThat(pushEventos(otra).get("alertas_generadas").asInt()).isZero();
+        } finally {
+            jdbc.update("update parametros_rango set optimo_max = 16, critico_max = 18 where variable = 'temp_c'");
+            reglas.recargar();
+        }
     }
 
     @Test

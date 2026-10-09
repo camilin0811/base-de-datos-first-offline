@@ -42,10 +42,12 @@ public class ConsultaService {
     private final LecturaAguaRepository lecturas;
     private final AlimentacionRepository alimentaciones;
     private final AlertaRepository alertas;
+    private final Reglas reglas;
 
     public ConsultaService(EntityManager em, EstanqueRepository estanques, LoteRepository lotes,
             ConteoRepository conteos, MortalidadRepository mortalidades, BiometriaRepository biometrias,
-            LecturaAguaRepository lecturas, AlimentacionRepository alimentaciones, AlertaRepository alertas) {
+            LecturaAguaRepository lecturas, AlimentacionRepository alimentaciones, AlertaRepository alertas,
+            Reglas reglas) {
         this.em = em;
         this.estanques = estanques;
         this.lotes = lotes;
@@ -55,6 +57,7 @@ public class ConsultaService {
         this.lecturas = lecturas;
         this.alimentaciones = alimentaciones;
         this.alertas = alertas;
+        this.reglas = reglas;
     }
 
     public List<LecturaAguaSalida> lecturasEstanque(UUID estanqueId, Instant desde, Instant hasta, int limite) {
@@ -118,9 +121,9 @@ public class ConsultaService {
         Double tasa = null;
         Double racion = null;
         if (peso != null && temp != null) {
-            tasa = Reglas.tasaAlimentacionPct(peso, temp);
+            tasa = reglas.tasaAlimentacionPct(peso, temp);
             if (biomasa != null) {
-                racion = Reglas.racionDiariaKg(biomasa, peso, temp);
+                racion = reglas.racionDiariaKg(biomasa, peso, temp);
             }
             if (tasa == 0) {
                 notas.add("Agua sobre 18 °C: se recomienda suspender la alimentación.");

@@ -58,17 +58,19 @@ public class SyncService {
     private final LoteRepository lotes;
     private final AlertaRepository alertas;
     private final DispositivoRepository dispositivos;
+    private final Reglas reglas;
     private final ObjectMapper mapper;
     private final Validator validator;
 
     public SyncService(EntityManager em, EstanqueRepository estanques, LoteRepository lotes,
-            AlertaRepository alertas, DispositivoRepository dispositivos, ObjectMapper mapper,
-            Validator validator) {
+            AlertaRepository alertas, DispositivoRepository dispositivos, Reglas reglas,
+            ObjectMapper mapper, Validator validator) {
         this.em = em;
         this.estanques = estanques;
         this.lotes = lotes;
         this.alertas = alertas;
         this.dispositivos = dispositivos;
+        this.reglas = reglas;
         this.mapper = mapper;
         this.validator = validator;
     }
@@ -196,7 +198,7 @@ public class SyncService {
             r.aceptados.add(evento.id());
 
             if (evento instanceof LecturaAguaEntrada lectura) {
-                for (Reglas.Resultado regla : Reglas.evaluarLectura(lectura.tempC(), lectura.ph(), lectura.oxigenoMgL())) {
+                for (Reglas.Resultado regla : reglas.evaluarLectura(lectura.tempC(), lectura.ph(), lectura.oxigenoMgL())) {
                     Alerta alerta = new Alerta();
                     alerta.setEstanqueId(lectura.estanqueId());
                     alerta.setLecturaId(lectura.id());
