@@ -4,9 +4,16 @@ import java.time.Instant;
 
 import com.lacocha.backend.modelo.Dispositivo;
 
+import jakarta.validation.constraints.Size;
+
 public final class Dispositivos {
 
     private Dispositivos() {
+    }
+
+    public record DispositivoEditar(
+            @Size(min = 1, max = 120) String descripcion,
+            Boolean activo) {
     }
 
     public record DispositivoSalida(String id, String descripcion, boolean activo,

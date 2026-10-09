@@ -2,6 +2,7 @@ package com.lacocha.backend;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import java.time.Duration;
@@ -263,6 +264,24 @@ class ApiTest {
         assertThat(cel).isNotNull();
         assertThat(cel.get("activo").asBoolean()).isTrue();
         assertThat(cel.get("ultimo_visto_en").asText()).isNotEmpty();
+    }
+
+    @Test
+    void darDeBajaUnDispositivoDesdeElPanel() throws Exception {
+        String celular = "cel-para-dar-de-baja";
+        Map<String, Object> cuerpo = mapa("dispositivo_id", celular, "eventos", List.of());
+        llamar(post("/api/sync/push").contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(cuerpo)), 200);
+
+        JsonNode r = llamar(patch("/api/dispositivos/" + celular).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"descripcion\":\"Celular de Don Luis\",\"activo\":false}"), 200);
+        assertThat(r.get("descripcion").asText()).isEqualTo("Celular de Don Luis");
+        assertThat(r.get("activo").asBoolean()).isFalse();
+
+        // Queda sin poder sincronizar, pero la fila sigue ahi: los eventos la referencian
+        llamar(post("/api/sync/push").contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(cuerpo)), 403);
+        assertThat(dispositivos.findById(celular)).isPresent();
     }
 
     @Test
