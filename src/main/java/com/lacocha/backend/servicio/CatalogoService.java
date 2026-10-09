@@ -1,6 +1,6 @@
 package com.lacocha.backend.servicio;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -92,6 +92,8 @@ public class CatalogoService {
         if (datos.estado() != null) {
             l.setEstado(datos.estado());
         }
+        l.setFechaCierre(datos.fechaCierre());
+        ajustarCierre(l);
         l.setActualizadoEn(Reloj.ahora());
         em.persist(l);
         return LoteSalida.de(l);
@@ -105,9 +107,26 @@ public class CatalogoService {
         if (datos.cantidadInicial() != null) l.setCantidadInicial(datos.cantidadInicial());
         if (datos.pesoInicialG() != null) l.setPesoInicialG(datos.pesoInicialG());
         if (datos.estado() != null) l.setEstado(datos.estado());
+        if (datos.fechaCierre() != null) l.setFechaCierre(datos.fechaCierre());
+        ajustarCierre(l);
         l.setActualizadoEn(Reloj.ahora());
         lotes.flush();
         return LoteSalida.de(l);
+    }
+
+    /**
+     * La base exige que un lote cerrado tenga fecha de cierre y que uno activo no la tenga.
+     * Se acomoda aca en vez de devolverle un 409 al cliente: cerrar sin decir la fecha quiere
+     * decir "se cerro hoy", y reabrir un lote quiere decir que la fecha de cierre ya no aplica.
+     */
+    static void ajustarCierre(Lote l) {
+        if ("cerrado".equals(l.getEstado())) {
+            if (l.getFechaCierre() == null) {
+                l.setFechaCierre(LocalDate.now());
+            }
+        } else {
+            l.setFechaCierre(null);
+        }
     }
 
     static ResponseStatusException noExiste(String que) {

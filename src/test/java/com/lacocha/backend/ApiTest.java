@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -252,6 +253,24 @@ class ApiTest {
         assertThat(r.get("alimento_ultima_semana_kg").asDouble()).isEqualTo(0.5);
         assertThat(r.get("alertas_pendientes").asInt()).isZero();
         assertThat(r.get("notas")).isEmpty();
+    }
+
+    @Test
+    void cerrarYReabrirUnLoteManejaLaFechaDeCierre() throws Exception {
+        String lote = crearCatalogo()[1];
+        assertThat(llamar(get("/api/lotes").param("estanque_id", crearCatalogo()[0]), 200)).isNotNull();
+
+        // Cerrar sin decir la fecha quiere decir que se cerro hoy
+        JsonNode cerrado = llamar(patch("/api/lotes/" + lote).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"estado\":\"cerrado\"}"), 200);
+        assertThat(cerrado.get("estado").asText()).isEqualTo("cerrado");
+        assertThat(cerrado.get("fecha_cierre").asText()).isEqualTo(LocalDate.now().toString());
+
+        // Reabrirlo borra la fecha: un lote activo no puede tener fecha de cosecha
+        JsonNode reabierto = llamar(patch("/api/lotes/" + lote).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"estado\":\"activo\"}"), 200);
+        assertThat(reabierto.get("estado").asText()).isEqualTo("activo");
+        assertThat(reabierto.get("fecha_cierre").isNull()).isTrue();
     }
 
     @Test

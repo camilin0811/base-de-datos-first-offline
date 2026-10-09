@@ -158,6 +158,8 @@ public class SyncService {
             actual.setCantidadInicial(l.cantidadInicial());
             actual.setPesoInicialG(l.pesoInicialG());
             actual.setEstado(l.estado() != null ? l.estado() : "activo");
+            actual.setFechaCierre(l.fechaCierre());
+            CatalogoService.ajustarCierre(actual);
             actual.setActualizadoEn(l.actualizadoEn().toInstant());
             if (nuevo) {
                 em.persist(actual);

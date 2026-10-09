@@ -25,6 +25,8 @@ public class Lote {
     @Column(name = "peso_inicial_g")
     private Double pesoInicialG;
     private String estado = "activo"; // activo | cerrado
+    /** Cuando se cosecho. La base exige que exista si el lote esta cerrado, y que no exista si esta activo. */
+    private LocalDate fechaCierre;
     private Instant actualizadoEn;
     private Instant servidorEn;
 
@@ -48,6 +50,8 @@ public class Lote {
     public void setPesoInicialG(Double pesoInicialG) { this.pesoInicialG = pesoInicialG; }
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
+    public LocalDate getFechaCierre() { return fechaCierre; }
+    public void setFechaCierre(LocalDate fechaCierre) { this.fechaCierre = fechaCierre; }
     public Instant getActualizadoEn() { return actualizadoEn; }
     public void setActualizadoEn(Instant actualizadoEn) { this.actualizadoEn = actualizadoEn; }
     public Instant getServidorEn() { return servidorEn; }

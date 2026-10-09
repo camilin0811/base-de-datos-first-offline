@@ -63,7 +63,8 @@ public final class Catalogo {
             LocalDate fechaSiembra,
             @PositiveOrZero Integer cantidadInicial,
             @Positive Double pesoInicialG,
-            @Pattern(regexp = ESTADOS_LOTE) String estado) {
+            @Pattern(regexp = ESTADOS_LOTE) String estado,
+            LocalDate fechaCierre) {
     }
 
     public record LoteEditar(
@@ -71,7 +72,8 @@ public final class Catalogo {
             LocalDate fechaSiembra,
             @PositiveOrZero Integer cantidadInicial,
             @Positive Double pesoInicialG,
-            @Pattern(regexp = ESTADOS_LOTE) String estado) {
+            @Pattern(regexp = ESTADOS_LOTE) String estado,
+            LocalDate fechaCierre) {
     }
 
     public record LoteSync(
@@ -82,15 +84,18 @@ public final class Catalogo {
             @PositiveOrZero Integer cantidadInicial,
             @Positive Double pesoInicialG,
             @Pattern(regexp = ESTADOS_LOTE) String estado,
+            LocalDate fechaCierre,
             @NotNull OffsetDateTime actualizadoEn) {
     }
 
     public record LoteSalida(UUID id, UUID estanqueId, String codigo, LocalDate fechaSiembra,
-            Integer cantidadInicial, Double pesoInicialG, String estado, Instant actualizadoEn) {
+            Integer cantidadInicial, Double pesoInicialG, String estado, LocalDate fechaCierre,
+            Instant actualizadoEn) {
 
         public static LoteSalida de(Lote l) {
             return new LoteSalida(l.getId(), l.getEstanqueId(), l.getCodigo(), l.getFechaSiembra(),
-                    l.getCantidadInicial(), l.getPesoInicialG(), l.getEstado(), l.getActualizadoEn());
+                    l.getCantidadInicial(), l.getPesoInicialG(), l.getEstado(), l.getFechaCierre(),
+                    l.getActualizadoEn());
         }
     }
 }
