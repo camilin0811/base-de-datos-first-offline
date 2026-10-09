@@ -320,6 +320,18 @@ class ApiTest {
     }
 
     @Test
+    void laBitacoraSeConsultaPorDispositivo() throws Exception {
+        String lote = crearCatalogo()[1];
+        pushEventos(mapa("tipo", "mortalidad", "id", nuevoId(), "lote_id", lote,
+                "cantidad", 1, "registrado_en", hace(2)));
+
+        JsonNode r = llamar(get("/api/sincronizaciones").param("dispositivo_id", "cel-1"), 200);
+        assertThat(r.size()).isGreaterThanOrEqualTo(1);
+        assertThat(r.get(0).get("dispositivo_id").asText()).isEqualTo("cel-1");
+        assertThat(r.get(0).get("servidor_en").asText()).isNotEmpty();
+    }
+
+    @Test
     void laBitacoraGuardaElReintentoComoDuplicado() throws Exception {
         String celular = "cel-bitacora";
         String lote = crearCatalogo()[1];
