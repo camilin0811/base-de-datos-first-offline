@@ -28,7 +28,7 @@ public class Alerta {
     private String nivel; // advertencia | critica
     private String mensaje;
     private Instant medidoEn;
-    private Instant creadaEn = Instant.now();
+    private Instant creadaEn = Reloj.ahora();
     private boolean atendida = false;
     private Instant atendidaEn;
     /** Id del dispositivo si la atendio el celular, o "panel" si fue el navegador. */

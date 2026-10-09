@@ -17,6 +17,7 @@ import com.lacocha.backend.dto.Catalogo.LoteEditar;
 import com.lacocha.backend.dto.Catalogo.LoteSalida;
 import com.lacocha.backend.modelo.Estanque;
 import com.lacocha.backend.modelo.Lote;
+import com.lacocha.backend.modelo.Reloj;
 import com.lacocha.backend.repositorio.EstanqueRepository;
 import com.lacocha.backend.repositorio.LoteRepository;
 
@@ -49,7 +50,7 @@ public class CatalogoService {
             e.setTipo(datos.tipo());
         }
         e.setVolumenM3(datos.volumenM3());
-        e.setActualizadoEn(Instant.now());
+        e.setActualizadoEn(Reloj.ahora());
         em.persist(e);
         return EstanqueSalida.de(e);
     }
@@ -61,7 +62,7 @@ public class CatalogoService {
         if (datos.tipo() != null) e.setTipo(datos.tipo());
         if (datos.volumenM3() != null) e.setVolumenM3(datos.volumenM3());
         if (datos.activo() != null) e.setActivo(datos.activo());
-        e.setActualizadoEn(Instant.now());
+        e.setActualizadoEn(Reloj.ahora());
         estanques.flush();
         return EstanqueSalida.de(e);
     }
@@ -91,7 +92,7 @@ public class CatalogoService {
         if (datos.estado() != null) {
             l.setEstado(datos.estado());
         }
-        l.setActualizadoEn(Instant.now());
+        l.setActualizadoEn(Reloj.ahora());
         em.persist(l);
         return LoteSalida.de(l);
     }
@@ -104,7 +105,7 @@ public class CatalogoService {
         if (datos.cantidadInicial() != null) l.setCantidadInicial(datos.cantidadInicial());
         if (datos.pesoInicialG() != null) l.setPesoInicialG(datos.pesoInicialG());
         if (datos.estado() != null) l.setEstado(datos.estado());
-        l.setActualizadoEn(Instant.now());
+        l.setActualizadoEn(Reloj.ahora());
         lotes.flush();
         return LoteSalida.de(l);
     }

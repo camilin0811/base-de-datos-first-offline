@@ -17,6 +17,7 @@ import com.lacocha.backend.modelo.Biometria;
 import com.lacocha.backend.modelo.Conteo;
 import com.lacocha.backend.modelo.LecturaAgua;
 import com.lacocha.backend.modelo.Lote;
+import com.lacocha.backend.modelo.Reloj;
 import com.lacocha.backend.repositorio.AlertaRepository;
 import com.lacocha.backend.repositorio.AlimentacionRepository;
 import com.lacocha.backend.repositorio.BiometriaRepository;
@@ -130,7 +131,7 @@ public class ConsultaService {
             }
         }
 
-        double alimentoSemana = alimentaciones.kgDelLoteDesde(loteId, Instant.now().minus(Duration.ofDays(7)));
+        double alimentoSemana = alimentaciones.kgDelLoteDesde(loteId, Reloj.ahora().minus(Duration.ofDays(7)));
 
         return new ResumenLote(
                 lote.getId(), lote.getCodigo(), lote.getEstanqueId(),
@@ -164,7 +165,7 @@ public class ConsultaService {
         Alerta alerta = alertas.findById(id).orElseThrow(() -> CatalogoService.noExiste("La alerta"));
         if (!alerta.isAtendida()) {
             alerta.setAtendida(true);
-            alerta.setAtendidaEn(Instant.now());
+            alerta.setAtendidaEn(Reloj.ahora());
             alerta.setAtendidaPor(quien);
         }
         return AlertaSalida.de(alerta);
