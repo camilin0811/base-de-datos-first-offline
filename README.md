@@ -16,7 +16,10 @@ src/main/java/com/lacocha/backend/
 ├── dto/           Lo que entra y sale de la API (records)
 ├── servicio/      Lógica: sincronización, resumen del lote y reglas (sistema experto)
 └── controlador/   Rutas REST y manejo de errores
-src/main/resources/db/migration/   Tablas (Flyway)
+src/main/resources/db/
+├── migration/     Migraciones de Flyway comunes a los dos motores
+├── motor/         Migraciones que solo entiende PostgreSQL o solo H2
+└── semilla/       Datos de ejemplo (no los aplica Flyway)
 ```
 
 ## Correr en local
@@ -56,6 +59,70 @@ para volver a aplicar las migraciones desde cero.
 Las migraciones comunes van en `db/migration/`. Lo que solo entiende un motor (por ejemplo los
 índices parciales, que H2 no soporta) va en `db/motor/postgresql/` y `db/motor/h2/`, y Flyway
 escoge la carpeta según el motor al que esté conectado.
+
+## Base de datos
+
+13 tablas, 32 índices, 30 restricciones `CHECK`, 16 llaves foráneas y 2 `UNIQUE`. Las migraciones
+se aplican solas al arrancar (Flyway) y están verificadas contra PostgreSQL 16, no solo contra H2.
+
+**Catálogo** — se puede editar; gana el `actualizado_en` más reciente.
+
+| Tabla | Para qué |
+|---|---|
+| `estanques` | Tanques, estanques y jaulas. Nombre único: el cuidador los distingue por ahí |
+| `lotes` | Siembras. Código único dentro de cada estanque. Si está cerrado, dice cuándo |
+
+**Eventos** — nunca se editan y el `id` lo genera el celular, por eso el push es idempotente.
+
+| Tabla | Para qué |
+|---|---|
+| `lecturas_agua` | pH, temperatura, oxígeno y el voltaje crudo de la sonda |
+| `conteos` | Lo que contó la máquina de alevinos |
+| `mortalidades` | Peces muertos y la causa |
+| `alimentaciones` | Kilos entregados |
+| `biometrias` | Peso promedio y tamaño de la muestra |
+
+**Decisiones del sistema experto** — son datos, no código, y cada fila lleva su fuente.
+
+| Tabla | Para qué |
+|---|---|
+| `parametros_rango` | Rango óptimo y crítico de cada variable. Fuera del óptimo se genera alerta |
+| `tasas_alimentacion` | Qué porcentaje de la biomasa se da por día según el peso del pez |
+| `factores_temperatura` | Cuánto se corrige esa tasa según la temperatura. Sobre 18 °C suspende |
+| `alertas` | Las genera el servidor. Deja quién la atendió y cuándo |
+
+**Operación**
+
+| Tabla | Para qué |
+|---|---|
+| `dispositivos` | Celulares y nodos. `ultimo_visto_en` distingue uno sin señal de uno perdido |
+| `sincronizaciones` | Qué pasó en cada push: aceptados, duplicados, obsoletos y rechazados |
+
+La base no depende de que los datos lleguen por la API: los mismos límites que validan los DTO
+están como `CHECK` y `UNIQUE` en el esquema, así que un `INSERT` por SQL directo o desde el panel
+web tampoco puede guardar un pH de 20, un estado inventado ni dos lotes con el mismo código.
+
+### Cargar datos de ejemplo
+
+```powershell
+docker compose up -d
+docker exec -i lacocha-postgres psql -U lacocha -d lacocha < src/main/resources/db/semilla/piloto.sql
+```
+
+Siembra tres estanques con dos meses de historia (1.080 lecturas, conteos, mortalidad,
+alimentación, biometrías, un lote cosechado y dos alertas pendientes). Se puede volver a correr:
+borra lo que sembró antes y lo recrea. **No** es una migración de Flyway a propósito, para que
+nunca llegue a la base de producción.
+
+### Si Flyway se queja de un checksum
+
+```
+Migration checksum mismatch for migration version N
+```
+
+Pasa cuando se edita una migración que ya se aplicó. En desarrollo se arregla recreando la base
+(`docker compose down -v`). En producción **no se edita una migración aplicada**: se escribe una
+nueva con el número siguiente.
 
 ## Cómo funciona la sincronización
 
@@ -105,10 +172,20 @@ para que un celular con el reloj atrasado no se pierda cambios.
 | GET | `/api/lotes/{id}/resumen` | Población, supervivencia, biomasa y ración sugerida |
 | GET | `/api/alertas` | Alertas (`pendientes`, `estanque_id`) |
 | POST | `/api/alertas/{id}/atender` | Marcar alerta como atendida |
+| GET | `/api/dispositivos` | Celulares que sincronizan, con la última vez que lo hicieron |
+| PATCH | `/api/dispositivos/{id}` | Ponerle nombre o darlo de baja (`activo`) |
+| GET | `/api/sincronizaciones` | Historial de envíos (`dispositivo_id`) |
+| GET | `/api/parametros` | Umbrales y curva de alimentación, con su fuente |
 | GET | `/salud` | Chequeo de Render (sin clave) |
 
-Los umbrales y la tabla de alimentación están en `servicio/Reglas.java`. Son **valores de referencia**:
-hay que ajustarlos con el productor y citarlos de AUNAP/FAO y del fabricante del alimento.
+Los umbrales y la curva de alimentación **ya no están en el código**: viven en las tablas
+`parametros_rango`, `tasas_alimentacion` y `factores_temperatura`, cada fila con su fuente.
+Ajustarlos con el productor es un `UPDATE`, no un redespliegue, y se consultan en
+`GET /api/parametros`.
+
+Siguen siendo **valores de referencia**: la columna `fuente` dice textualmente que están sin
+citar. Antes del piloto hay que ajustarlos con el productor aliado y citarlos de AUNAP/FAO y de
+la tabla del fabricante del alimento, y actualizar esa columna.
 
 ## Desplegar en Render + Neon
 
