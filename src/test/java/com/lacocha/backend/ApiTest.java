@@ -250,6 +250,22 @@ class ApiTest {
     }
 
     @Test
+    void unDispositivoDadoDeBajaNoPuedeSincronizar() throws Exception {
+        String celular = "cel-dado-de-baja";
+        Map<String, Object> cuerpo = mapa("dispositivo_id", celular, "eventos", List.of());
+        llamar(post("/api/sync/push").contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(cuerpo)), 200);
+
+        Dispositivo d = dispositivos.findById(celular).orElseThrow();
+        d.setActivo(false);
+        dispositivos.saveAndFlush(d);
+
+        JsonNode r = llamar(post("/api/sync/push").contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(cuerpo)), 403);
+        assertThat(r.get("detalle").asText()).contains("dado de baja");
+    }
+
+    @Test
     void nombreRepetidoEnElPushNoTumbaLaCola() throws Exception {
         String[] cat = crearCatalogo();
         String tomado = llamar(get("/api/estanques"), 200).get(0).get("nombre").asText();

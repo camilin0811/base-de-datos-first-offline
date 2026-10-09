@@ -8,8 +8,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -242,6 +244,12 @@ public class SyncService {
             // Los campos van completos antes del persist: Hibernate copia el estado de la
             // entidad en ese momento y no vuelve a leerlo al hacer el flush.
             em.persist(dispositivo);
+        } else if (!dispositivo.isActivo()) {
+            // Un celular dado de baja (perdido, robado o que salio de la finca) no puede
+            // seguir escribiendo. Se corta el push completo y no se registra el intento:
+            // el dato de un equipo que ya no esta autorizado no es confiable.
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "El dispositivo " + id + " esta dado de baja");
         } else {
             dispositivo.setUltimoVistoEn(ahora);
         }
