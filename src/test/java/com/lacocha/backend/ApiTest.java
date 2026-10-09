@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 class ApiTest {
 
     private static final String CLAVE = "clave-prueba";
+
+    /** Las pruebas comparten la misma base en memoria y el nombre del estanque es unico. */
+    private static final AtomicInteger SECUENCIA = new AtomicInteger();
 
     @Autowired
     MockMvc mvc;
@@ -76,8 +80,9 @@ class ApiTest {
     String[] crearCatalogo() throws Exception {
         String estanque = nuevoId();
         String lote = nuevoId();
+        String nombre = "Tanque de pruebas " + SECUENCIA.incrementAndGet();
         push(mapa(
-                "estanques", List.of(mapa("id", estanque, "nombre", "Tanque 1", "tipo", "tanque", "actualizado_en", hace(120))),
+                "estanques", List.of(mapa("id", estanque, "nombre", nombre, "tipo", "tanque", "actualizado_en", hace(120))),
                 "lotes", List.of(mapa("id", lote, "estanque_id", estanque, "codigo", "L12", "cantidad_inicial", 5000,
                         "peso_inicial_g", 2.0, "actualizado_en", hace(120)))));
         return new String[] {estanque, lote};
