@@ -229,6 +229,15 @@ class ApiTest {
     }
 
     @Test
+    void nombreDeEstanqueRepetidoDa409() throws Exception {
+        String cuerpo = "{\"nombre\":\"Tanque repetido\"}";
+        llamar(post("/api/estanques").contentType(MediaType.APPLICATION_JSON).content(cuerpo), 201);
+
+        JsonNode r = llamar(post("/api/estanques").contentType(MediaType.APPLICATION_JSON).content(cuerpo), 409);
+        assertThat(r.get("detalle").asText()).isEqualTo("Ya existe un estanque con ese nombre");
+    }
+
+    @Test
     void validacionDelCatalogoDa422() throws Exception {
         JsonNode r = llamar(post("/api/estanques").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"nombre\":\"\",\"tipo\":\"piscina\"}"), 422);

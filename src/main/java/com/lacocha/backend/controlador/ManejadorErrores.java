@@ -3,6 +3,7 @@ package com.lacocha.backend.controlador;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -33,6 +34,26 @@ public class ManejadorErrores {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, String>> jsonInvalido(HttpMessageNotReadableException ex) {
         return ResponseEntity.badRequest().body(Map.of("detalle", "El cuerpo no es un JSON válido o tiene campos con formato incorrecto"));
+    }
+
+    /**
+     * Choque con una restriccion de la base (nombre de estanque repetido, por ejemplo).
+     * Sale 409 y no 500 porque no es una falla del servidor: es un dato que el usuario
+     * puede corregir. El mensaje se arma con el nombre de la restriccion para no
+     * devolverle el texto crudo de PostgreSQL a la app.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> integridad(DataIntegrityViolationException ex) {
+        String causa = String.valueOf(ex.getMostSpecificCause().getMessage()).toLowerCase();
+        String detalle;
+        if (causa.contains("uq_estanques_nombre")) {
+            detalle = "Ya existe un estanque con ese nombre";
+        } else if (causa.contains("uq_lotes_estanque_codigo")) {
+            detalle = "Ya existe un lote con ese código en el estanque";
+        } else {
+            detalle = "El dato no cumple una restricción de la base de datos";
+        }
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("detalle", detalle));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
