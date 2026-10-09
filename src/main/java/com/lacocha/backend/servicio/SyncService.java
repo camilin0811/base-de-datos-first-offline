@@ -35,6 +35,7 @@ import com.lacocha.backend.modelo.Estanque;
 import com.lacocha.backend.modelo.Evento;
 import com.lacocha.backend.modelo.Lote;
 import com.lacocha.backend.modelo.Reloj;
+import com.lacocha.backend.modelo.Sincronizacion;
 import com.lacocha.backend.repositorio.AlertaRepository;
 import com.lacocha.backend.repositorio.DispositivoRepository;
 import com.lacocha.backend.repositorio.EstanqueRepository;
@@ -215,6 +216,7 @@ public class SyncService {
             }
         }
 
+        anotarEnLaBitacora(peticion.dispositivoId(), r, servidorEn);
         return new PushRespuesta(r.aceptados, r.duplicados, r.obsoletos, r.rechazados, r.alertasGeneradas, servidorEn);
     }
 
@@ -229,6 +231,25 @@ public class SyncService {
                 listaLotes.stream().map(LoteSalida::de).toList(),
                 alertas.findTop100ByAtendidaFalseOrderByMedidoEnDesc().stream().map(AlertaSalida::de).toList(),
                 servidorEn);
+    }
+
+    /**
+     * Guarda lo que paso en este push. Es la misma cuenta que se le devuelve al celular, que
+     * hasta ahora se iba con la respuesta HTTP sin dejar rastro en el servidor.
+     *
+     * Va dentro de la transaccion del push a proposito: si el push se cae y se revierte, no
+     * tiene sentido que quede anotado como si hubiera entrado.
+     */
+    private void anotarEnLaBitacora(String dispositivoId, Resultado r, Instant servidorEn) {
+        Sincronizacion registro = new Sincronizacion();
+        registro.setDispositivoId(dispositivoId);
+        registro.setAceptados(r.aceptados.size());
+        registro.setDuplicados(r.duplicados.size());
+        registro.setObsoletos(r.obsoletos.size());
+        registro.setRechazados(r.rechazados.size());
+        registro.setAlertasGeneradas(r.alertasGeneradas);
+        registro.setServidorEn(servidorEn);
+        em.persist(registro);
     }
 
     /**

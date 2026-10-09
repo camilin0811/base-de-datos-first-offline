@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lacocha.backend.modelo.Dispositivo;
 import com.lacocha.backend.repositorio.DispositivoRepository;
+import com.lacocha.backend.repositorio.SincronizacionRepository;
 import com.lacocha.backend.servicio.Reglas;
 
 @SpringBootTest
@@ -47,6 +48,9 @@ class ApiTest {
 
     @Autowired
     DispositivoRepository dispositivos;
+
+    @Autowired
+    SincronizacionRepository sincronizaciones;
 
     @Autowired
     JdbcTemplate jdbc;
@@ -313,6 +317,30 @@ class ApiTest {
         JsonNode alertas = llamar(get("/api/alertas").param("estanque_id", estanque), 200);
         JsonNode r = llamar(post("/api/alertas/" + alertas.get(0).get("id").asText() + "/atender"), 200);
         assertThat(r.get("atendida_por").asText()).isEqualTo("panel");
+    }
+
+    @Test
+    void laBitacoraGuardaElReintentoComoDuplicado() throws Exception {
+        String celular = "cel-bitacora";
+        String lote = crearCatalogo()[1];
+        Map<String, Object> mortalidad = mapa("tipo", "mortalidad", "id", nuevoId(), "lote_id", lote,
+                "cantidad", 4, "registrado_en", hace(3));
+        Map<String, Object> cuerpo = mapa("dispositivo_id", celular, "eventos", List.of(mortalidad));
+
+        llamar(post("/api/sync/push").contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(cuerpo)), 200);
+        // El celular no recibio la respuesta y reintenta el mismo evento
+        llamar(post("/api/sync/push").contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(cuerpo)), 200);
+
+        var registros = sincronizaciones.findTop200ByDispositivoIdOrderByServidorEnDesc(celular);
+        assertThat(registros).hasSize(2);
+        // El mas reciente es el reintento: nada aceptado y un duplicado
+        assertThat(registros.get(0).getAceptados()).isZero();
+        assertThat(registros.get(0).getDuplicados()).isEqualTo(1);
+        // El primero si guardo el evento
+        assertThat(registros.get(1).getAceptados()).isEqualTo(1);
+        assertThat(registros.get(1).getDuplicados()).isZero();
     }
 
     @Test
