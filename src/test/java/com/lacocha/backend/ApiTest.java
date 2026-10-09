@@ -229,6 +229,39 @@ class ApiTest {
     }
 
     @Test
+    void nombreRepetidoEnElPushNoTumbaLaCola() throws Exception {
+        String[] cat = crearCatalogo();
+        String tomado = llamar(get("/api/estanques"), 200).get(0).get("nombre").asText();
+
+        String choca = nuevoId();
+        String bueno = nuevoId();
+        String evento = nuevoId();
+        JsonNode r = push(mapa(
+                "estanques", List.of(
+                        mapa("id", choca, "nombre", tomado, "actualizado_en", hace(5)),
+                        mapa("id", bueno, "nombre", "Tanque sin choque", "actualizado_en", hace(5))),
+                "eventos", List.of(mapa("tipo", "mortalidad", "id", evento, "lote_id", cat[1],
+                        "cantidad", 2, "registrado_en", hace(5)))));
+
+        // El estanque que choca se rechaza solo a el; el otro estanque y el evento se guardan
+        assertThat(textos(r.get("aceptados"))).contains(bueno, evento).doesNotContain(choca);
+        assertThat(r.get("rechazados")).hasSize(1);
+        assertThat(r.get("rechazados").get(0).get("id").asText()).isEqualTo(choca);
+        assertThat(r.get("rechazados").get(0).get("error").asText()).startsWith("nombre:");
+    }
+
+    @Test
+    void codigoDeLoteRepetidoEnElMismoEstanqueSeRechaza() throws Exception {
+        String[] cat = crearCatalogo();
+        String otro = nuevoId();
+        JsonNode r = push(mapa("lotes", List.of(mapa("id", otro, "estanque_id", cat[0], "codigo", "L12",
+                "cantidad_inicial", 100, "actualizado_en", hace(5)))));
+
+        assertThat(r.get("rechazados")).hasSize(1);
+        assertThat(r.get("rechazados").get(0).get("error").asText()).startsWith("codigo:");
+    }
+
+    @Test
     void nombreDeEstanqueRepetidoDa409() throws Exception {
         String cuerpo = "{\"nombre\":\"Tanque repetido\"}";
         llamar(post("/api/estanques").contentType(MediaType.APPLICATION_JSON).content(cuerpo), 201);

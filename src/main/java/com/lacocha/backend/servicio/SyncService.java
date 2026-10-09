@@ -101,6 +101,10 @@ public class SyncService {
                 r.obsoletos.add(e.id());
                 continue;
             }
+            if (nombreOcupado(e.id(), e.nombre())) {
+                r.rechazados.add(new Rechazo(e.id().toString(), "nombre: ya existe otro estanque con ese nombre"));
+                continue;
+            }
             actual.setNombre(e.nombre());
             actual.setTipo(e.tipo() != null ? e.tipo() : "estanque");
             actual.setVolumenM3(e.volumenM3());
@@ -130,6 +134,10 @@ public class SyncService {
                 actual.setId(l.id());
             } else if (!l.actualizadoEn().toInstant().isAfter(actual.getActualizadoEn())) {
                 r.obsoletos.add(l.id());
+                continue;
+            }
+            if (codigoOcupado(l.id(), l.estanqueId(), l.codigo())) {
+                r.rechazados.add(new Rechazo(l.id().toString(), "codigo: ya existe otro lote con ese código en el estanque"));
                 continue;
             }
             actual.setEstanqueId(l.estanqueId());
@@ -209,6 +217,24 @@ public class SyncService {
                 listaLotes.stream().map(LoteSalida::de).toList(),
                 alertas.findTop100ByAtendidaFalseOrderByMedidoEnDesc().stream().map(AlertaSalida::de).toList(),
                 servidorEn);
+    }
+
+    /**
+     * El nombre del estanque y el codigo del lote son unicos en la base. Si el choque llegara
+     * hasta el INSERT, la transaccion entera del push se caeria y el celular perderia toda la
+     * cola, no solo el elemento malo. Por eso se detecta antes y se rechaza solo ese.
+     *
+     * La consulta fuerza el flush de lo que lleva la transaccion, asi que tambien detecta dos
+     * estanques con el mismo nombre dentro del mismo envio.
+     */
+    private boolean nombreOcupado(UUID id, String nombre) {
+        return estanques.findByNombre(nombre).filter(otro -> !otro.getId().equals(id)).isPresent();
+    }
+
+    private boolean codigoOcupado(UUID id, UUID estanqueId, String codigo) {
+        return lotes.findByEstanqueIdAndCodigo(estanqueId, codigo)
+                .filter(otro -> !otro.getId().equals(id))
+                .isPresent();
     }
 
     private Entrada leerEvento(JsonNode crudo) throws EventoInvalido {
