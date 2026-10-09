@@ -33,6 +33,30 @@ No hace falta Neon: en local usa una base H2 en la carpeta `data/`.
 También se puede abrir la carpeta en IntelliJ o VS Code y ejecutar `LaCochaApplication`
 con el perfil `local` (`--spring.profiles.active=local`).
 
+## Probar las migraciones contra PostgreSQL
+
+Las pruebas corren en H2 y producción en PostgreSQL (Neon). Una migración puede pasar en H2 y
+romperse en Neon, así que lo que toque el esquema se verifica antes contra un PostgreSQL de verdad:
+
+```powershell
+docker compose up -d
+.\mvnw spring-boot:run -Dspring-boot.run.profiles=postgres
+```
+
+Para revisar cómo quedó el esquema:
+
+```powershell
+docker exec lacocha-postgres psql -U lacocha -d lacocha -c "\d estanques"
+docker exec lacocha-postgres psql -U lacocha -d lacocha -c "select version, description, success from flyway_schema_history order by installed_rank"
+```
+
+Al terminar, `docker compose down`. Con `docker compose down -v` se borra también la base, útil
+para volver a aplicar las migraciones desde cero.
+
+Las migraciones comunes van en `db/migration/`. Lo que solo entiende un motor (por ejemplo los
+índices parciales, que H2 no soporta) va en `db/motor/postgresql/` y `db/motor/h2/`, y Flyway
+escoge la carpeta según el motor al que esté conectado.
+
 ## Cómo funciona la sincronización
 
 Todo lo que registra el celular es un **evento** con un `id` (UUID) que genera el propio celular.
