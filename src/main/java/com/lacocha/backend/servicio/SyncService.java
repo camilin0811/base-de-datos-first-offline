@@ -202,6 +202,7 @@ public class SyncService {
                     Alerta alerta = new Alerta();
                     alerta.setEstanqueId(lectura.estanqueId());
                     alerta.setLecturaId(lectura.id());
+                    alerta.setDisparadaPor("lectura_agua");
                     alerta.setVariable(regla.variable());
                     alerta.setValor(regla.valor());
                     alerta.setNivel(regla.nivel());

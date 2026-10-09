@@ -7,7 +7,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-/** La genera el servidor al recibir una lectura fuera de rango. */
+/**
+ * La genera el servidor. Hoy nacen de una lectura de agua fuera de rango, pero la tabla ya
+ * admite alertas de lote (mortalidad, supervivencia): en esas, lectura_id y variable van
+ * nulas y lote_id trae el lote.
+ */
 @Entity
 @Table(name = "alertas")
 public class Alerta {
@@ -16,6 +20,9 @@ public class Alerta {
     private UUID id = UUID.randomUUID();
     private UUID estanqueId;
     private UUID lecturaId;
+    private UUID loteId;
+    /** lectura_agua | mortalidad | supervivencia */
+    private String disparadaPor = "lectura_agua";
     private String variable;
     private Double valor;
     private String nivel; // advertencia | critica
@@ -29,6 +36,10 @@ public class Alerta {
     public void setEstanqueId(UUID estanqueId) { this.estanqueId = estanqueId; }
     public UUID getLecturaId() { return lecturaId; }
     public void setLecturaId(UUID lecturaId) { this.lecturaId = lecturaId; }
+    public UUID getLoteId() { return loteId; }
+    public void setLoteId(UUID loteId) { this.loteId = loteId; }
+    public String getDisparadaPor() { return disparadaPor; }
+    public void setDisparadaPor(String disparadaPor) { this.disparadaPor = disparadaPor; }
     public String getVariable() { return variable; }
     public void setVariable(String variable) { this.variable = variable; }
     public Double getValor() { return valor; }
