@@ -153,10 +153,20 @@ public class ConsultaService {
         return consulta.getResultList().stream().map(AlertaSalida::de).toList();
     }
 
+    /**
+     * quien es el id del dispositivo cuando la atiende el celular, o "panel" desde el navegador.
+     *
+     * Si la alerta ya estaba atendida no se toca la hora: interesa cuanto tardo la primera
+     * respuesta, no la ultima vez que alguien volvio a pulsar el boton.
+     */
     @Transactional
-    public AlertaSalida atenderAlerta(UUID id) {
+    public AlertaSalida atenderAlerta(UUID id, String quien) {
         Alerta alerta = alertas.findById(id).orElseThrow(() -> CatalogoService.noExiste("La alerta"));
-        alerta.setAtendida(true);
+        if (!alerta.isAtendida()) {
+            alerta.setAtendida(true);
+            alerta.setAtendidaEn(Instant.now());
+            alerta.setAtendidaPor(quien);
+        }
         return AlertaSalida.de(alerta);
     }
 }

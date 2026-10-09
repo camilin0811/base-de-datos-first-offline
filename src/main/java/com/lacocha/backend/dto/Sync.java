@@ -41,12 +41,13 @@ public final class Sync {
     }
 
     public record AlertaSalida(UUID id, UUID estanqueId, UUID lecturaId, UUID loteId, String disparadaPor,
-            String variable, Double valor, String nivel, String mensaje, Instant medidoEn, boolean atendida) {
+            String variable, Double valor, String nivel, String mensaje, Instant medidoEn, boolean atendida,
+            Instant atendidaEn, String atendidaPor) {
 
         public static AlertaSalida de(Alerta a) {
             return new AlertaSalida(a.getId(), a.getEstanqueId(), a.getLecturaId(), a.getLoteId(),
                     a.getDisparadaPor(), a.getVariable(), a.getValor(), a.getNivel(), a.getMensaje(),
-                    a.getMedidoEn(), a.isAtendida());
+                    a.getMedidoEn(), a.isAtendida(), a.getAtendidaEn(), a.getAtendidaPor());
         }
     }
 

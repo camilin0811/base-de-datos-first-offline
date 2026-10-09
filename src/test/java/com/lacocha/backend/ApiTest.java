@@ -289,8 +289,30 @@ class ApiTest {
 
         JsonNode alertas = llamar(get("/api/alertas").param("estanque_id", estanque), 200);
         assertThat(alertas.get(0).get("nivel").asText()).isEqualTo("advertencia");
-        llamar(post("/api/alertas/" + alertas.get(0).get("id").asText() + "/atender"), 200);
+        String id = alertas.get(0).get("id").asText();
+
+        JsonNode atendida = llamar(post("/api/alertas/" + id + "/atender").param("dispositivo_id", "cel-1"), 200);
+        assertThat(atendida.get("atendida").asBoolean()).isTrue();
+        assertThat(atendida.get("atendida_por").asText()).isEqualTo("cel-1");
+        String cuando = atendida.get("atendida_en").asText();
+        assertThat(cuando).isNotEmpty();
+
         assertThat(llamar(get("/api/alertas").param("estanque_id", estanque), 200)).isEmpty();
+
+        // Volver a pulsar el boton no mueve la hora: interesa la primera respuesta
+        JsonNode otraVez = llamar(post("/api/alertas/" + id + "/atender"), 200);
+        assertThat(otraVez.get("atendida_en").asText()).isEqualTo(cuando);
+        assertThat(otraVez.get("atendida_por").asText()).isEqualTo("cel-1");
+    }
+
+    @Test
+    void sinDispositivoLaAlertaQuedaAtendidaPorElPanel() throws Exception {
+        String estanque = crearCatalogo()[0];
+        pushEventos(mapa("tipo", "lectura_agua", "id", nuevoId(), "estanque_id", estanque, "ph", 6.1, "registrado_en", hace(1)));
+
+        JsonNode alertas = llamar(get("/api/alertas").param("estanque_id", estanque), 200);
+        JsonNode r = llamar(post("/api/alertas/" + alertas.get(0).get("id").asText() + "/atender"), 200);
+        assertThat(r.get("atendida_por").asText()).isEqualTo("panel");
     }
 
     @Test

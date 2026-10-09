@@ -59,7 +59,10 @@ public class ConsultaController {
     }
 
     @PostMapping("/alertas/{id}/atender")
-    public AlertaSalida atender(@PathVariable UUID id) {
-        return servicio.atenderAlerta(id);
+    @Operation(summary = "Marcar una alerta como atendida, dejando quien y cuando")
+    public AlertaSalida atender(
+            @PathVariable UUID id,
+            @RequestParam(name = "dispositivo_id", required = false) String dispositivoId) {
+        return servicio.atenderAlerta(id, dispositivoId != null ? dispositivoId : "panel");
     }
 }
