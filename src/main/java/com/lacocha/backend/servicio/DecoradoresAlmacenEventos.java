@@ -19,5 +19,7 @@ import com.lacocha.backend.modelo.Evento;
 public final class DecoradoresAlmacenEventos {
     private DecoradoresAlmacenEventos() {
     }
+
+    /** Base: un AlmacenEventos que envuelve a otro y reenvía todo sin tocarlo. */
 }
 
