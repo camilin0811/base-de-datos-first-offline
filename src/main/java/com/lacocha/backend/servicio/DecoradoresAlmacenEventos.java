@@ -77,5 +77,11 @@ public final class DecoradoresAlmacenEventos {
                     evento.getId(), evento.getDispositivoId(), evento.getOrigen());
         }
     }
+
+    /**
+     * Cuenta lo guardado por origen. La tesis compara el contador de alevinos contra el conteo a
+     * mano, y esto responde cuánto de lo que llegó lo midió la máquina sin tener que consultar la
+     * base. Vive un solo push: una cuenta que sumara dos pushes distintos no diría nada.
+     */
 }
 
