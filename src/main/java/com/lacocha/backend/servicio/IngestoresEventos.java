@@ -29,5 +29,12 @@ public class IngestoresEventos {
     public interface Ingestor {
         int despuesDeGuardar(Entrada evento, AlmacenEventos almacen);
     }
+
+    /**
+     * Método fábrica: cada subclase responde por un "tipo" del protocolo y decide qué ingestor lo
+     * atiende. Aceptar una clase nueva de evento es agregar una subclase y registrarla más abajo;
+
+     * el adaptador, la tubería y los controladores no cambian.
+     */
 }
 
