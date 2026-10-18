@@ -50,5 +50,11 @@ public final class DecoradoresAlmacenEventos {
             return interno.guardarAlertas(alertas);
         }
     }
+
+    /**
+     * Una línea por evento guardado. Un push trae hasta 500, así que solo se envuelve cuando su
+     * nivel está realmente encendido (ver encendido()). Existe para responder la pregunta que
+     * siempre sale en campo: "la app dice que lo subió, ¿está o no está?".
+     */
 }
 
