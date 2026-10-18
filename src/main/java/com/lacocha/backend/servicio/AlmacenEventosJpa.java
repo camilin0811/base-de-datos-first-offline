@@ -35,5 +35,12 @@ public class AlmacenEventosJpa implements AlmacenEventos {
     public void guardar(Evento evento) {
         em.persist(evento);
     }
+
+    @Override
+    public boolean existePadre(boolean padreEsEstanque, UUID padreId) {
+        // En una variable y no en línea: el ternario de dos clases de entidad rompe la inferencia
+        Class<?> padre = padreEsEstanque ? Estanque.class : Lote.class;
+        return em.find(padre, padreId) != null;
+    }
 }
 
