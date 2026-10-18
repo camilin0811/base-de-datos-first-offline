@@ -84,5 +84,9 @@ public class AdaptadorJsonPush {
     }
 
     /** El id de una trama que no se pudo ni leer, para que el celular igual sepa cuál fue. */
+
+    public static String idCrudo(JsonNode crudo) {
+        return crudo != null && crudo.hasNonNull("id") ? crudo.get("id").asText() : null;
+    }
 }
 
