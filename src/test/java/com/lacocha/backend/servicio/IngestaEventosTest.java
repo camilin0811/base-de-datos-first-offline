@@ -239,5 +239,15 @@ class IngestaEventosTest {
      * levanta la suya. Queda escrito aquí para que el día que se agregue ese filtro la prueba lo
      * diga en voz alta, en vez de que el cambio pase sin que nadie lo note.
      */
+
+    @Test
+    void dosLecturasFueraDeRangoLevantanDosAlertas() {
+        almacen.padres.add(estanqueId);
+
+        ingerir(lectura(UUID.randomUUID(), 22.0));
+        ingerir(lectura(UUID.randomUUID(), 22.5));
+
+        assertThat(almacen.alertas).hasSize(2);
+    }
 }
 
