@@ -39,5 +39,11 @@ public class AdaptadorJsonPush {
     private final Validator validator;
 
     private final IngestoresEventos ingestores;
+
+    public AdaptadorJsonPush(ObjectMapper mapper, Validator validator, IngestoresEventos ingestores) {
+        this.mapper = mapper;
+        this.validator = validator;
+        this.ingestores = ingestores;
+    }
 }
 
