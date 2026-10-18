@@ -161,5 +161,9 @@ public class IngestoresEventos {
         Fabrica fabrica = porTipo.get(tipo);
         return fabrica != null ? fabrica.claseEntrada() : null;
     }
+
+    public Set<String> tipos() {
+        return porTipo.keySet();
+    }
 }
 
