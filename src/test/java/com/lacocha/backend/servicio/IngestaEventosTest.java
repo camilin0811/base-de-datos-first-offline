@@ -206,5 +206,18 @@ class IngestaEventosTest {
                 .satisfies(rechazo -> assertThat(rechazo.error())
                         .isEqualTo("tipo: debe ser uno de lectura_agua, conteo, mortalidad, alimentacion, biometria"));
     }
+
+    @Test
+    void sinOrigenElEventoSeGuardaComoManual() {
+        almacen.padres.add(loteId);
+        JsonNode sinOrigen = json("""
+                {"tipo":"conteo","id":"%s","registrado_en":"%s","lote_id":"%s","total":7}
+                """.formatted(UUID.randomUUID(), REGISTRADO_EN, loteId));
+
+        ingerir(sinOrigen);
+
+        assertThat(almacen.guardados.values()).singleElement()
+                .satisfies(e -> assertThat(e.getOrigen()).isEqualTo("manual"));
+    }
 }
 
