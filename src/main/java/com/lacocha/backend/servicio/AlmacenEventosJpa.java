@@ -19,6 +19,7 @@ import jakarta.persistence.EntityManager;
  */
 @Component
 public class AlmacenEventosJpa implements AlmacenEventos {
+
     private final EntityManager em;
 
     public AlmacenEventosJpa(EntityManager em) {
@@ -42,5 +43,10 @@ public class AlmacenEventosJpa implements AlmacenEventos {
         Class<?> padre = padreEsEstanque ? Estanque.class : Lote.class;
         return em.find(padre, padreId) != null;
     }
-}
 
+    @Override
+    public int guardarAlertas(List<Alerta> alertas) {
+        alertas.forEach(em::persist);
+        return alertas.size();
+    }
+}
