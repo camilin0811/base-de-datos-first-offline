@@ -219,5 +219,19 @@ class IngestaEventosTest {
         assertThat(almacen.guardados.values()).singleElement()
                 .satisfies(e -> assertThat(e.getOrigen()).isEqualTo("manual"));
     }
+
+    @Test
+    void unaLecturaFueraDeRangoLevantaAlerta() {
+        almacen.padres.add(estanqueId);
+
+        IngestaEventos.Resultado r = ingerir(lectura(UUID.randomUUID(), 22.0));
+
+        assertThat(r.alertasGeneradas()).isEqualTo(1);
+        assertThat(almacen.alertas).singleElement().satisfies(a -> {
+            assertThat(a.getVariable()).isEqualTo("temp_c");
+            assertThat(a.getNivel()).isEqualTo("critica");
+            assertThat(a.getEstanqueId()).isEqualTo(estanqueId);
+        });
+    }
 }
 
