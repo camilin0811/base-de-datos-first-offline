@@ -29,18 +29,16 @@ import com.lacocha.backend.servicio.DecoradoresAlmacenEventos.Rastro;
  */
 @Component
 public class IngestaEventos {
+
     private static final Logger log = LoggerFactory.getLogger(IngestaEventos.class);
 
     /** Lo que produjeron los eventos de un push. */
-
     public record Resultado(List<UUID> aceptados, List<UUID> duplicados, List<Rechazo> rechazados,
             int alertasGeneradas) {
     }
 
     private final AlmacenEventos almacen;
-
     private final AdaptadorJsonPush adaptador;
-
     private final IngestoresEventos ingestores;
 
     public IngestaEventos(AlmacenEventos almacen, AdaptadorJsonPush adaptador, IngestoresEventos ingestores) {
@@ -94,5 +92,13 @@ public class IngestaEventos {
     }
 
     /** El id lo pone el celular (es lo que hace idempotente el push); lo demás lo pone el servidor. */
+    private static Evento sellar(Entrada evento, String dispositivoId, Instant servidorEn) {
+        Evento entidad = evento.aEntidad();
+        entidad.setId(evento.id());
+        entidad.setDispositivoId(dispositivoId);
+        entidad.setOrigen(evento.origen() != null ? evento.origen() : "manual");
+        entidad.setRegistradoEn(evento.registradoEn().toInstant());
+        entidad.setRecibidoEn(servidorEn);
+        return entidad;
+    }
 }
-
