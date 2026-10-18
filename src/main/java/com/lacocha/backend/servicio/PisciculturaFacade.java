@@ -92,5 +92,9 @@ public class PisciculturaFacade {
     public ResumenLote resumenLote(UUID loteId) {
         return consultas.resumenLote(loteId);
     }
+
+    public List<AlertaSalida> listarAlertas(boolean pendientes, UUID estanqueId, int limite) {
+        return consultas.listarAlertas(pendientes, estanqueId, limite);
+    }
 }
 
