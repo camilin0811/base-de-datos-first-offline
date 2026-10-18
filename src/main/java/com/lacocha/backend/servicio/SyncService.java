@@ -2,10 +2,7 @@ package com.lacocha.backend.servicio;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -13,26 +10,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.lacocha.backend.dto.Catalogo.EstanqueSalida;
 import com.lacocha.backend.dto.Catalogo.EstanqueSync;
 import com.lacocha.backend.dto.Catalogo.LoteSalida;
 import com.lacocha.backend.dto.Catalogo.LoteSync;
-import com.lacocha.backend.dto.Eventos;
-import com.lacocha.backend.dto.Eventos.Entrada;
-import com.lacocha.backend.dto.Eventos.LecturaAguaEntrada;
 import com.lacocha.backend.dto.Sync.AlertaSalida;
 import com.lacocha.backend.dto.Sync.PullRespuesta;
 import com.lacocha.backend.dto.Sync.PushPeticion;
 import com.lacocha.backend.dto.Sync.PushRespuesta;
 import com.lacocha.backend.dto.Sync.Rechazo;
-import com.lacocha.backend.modelo.Alerta;
 import com.lacocha.backend.modelo.Dispositivo;
 import com.lacocha.backend.modelo.Estanque;
-import com.lacocha.backend.modelo.Evento;
 import com.lacocha.backend.modelo.Lote;
 import com.lacocha.backend.modelo.Reloj;
 import com.lacocha.backend.modelo.Sincronizacion;
@@ -42,14 +30,13 @@ import com.lacocha.backend.repositorio.EstanqueRepository;
 import com.lacocha.backend.repositorio.LoteRepository;
 
 import jakarta.persistence.EntityManager;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validator;
 
 /**
  * Sincronización offline-first con la app del cuidador.
  *
  * push: el celular sube lo que tiene pendiente en su cola. Es idempotente: si la señal se cae a mitad
  *       del envío y el celular reintenta, los eventos repetidos salen en "duplicados" y no se guardan dos veces.
+ *       El catálogo se fusiona aquí; los eventos se los lleva IngestaEventos.
  * pull: el celular baja los cambios del catálogo hechos desde el panel o desde otro celular.
  */
 @Service
@@ -60,21 +47,16 @@ public class SyncService {
     private final LoteRepository lotes;
     private final AlertaRepository alertas;
     private final DispositivoRepository dispositivos;
-    private final Reglas reglas;
-    private final ObjectMapper mapper;
-    private final Validator validator;
+    private final IngestaEventos eventos;
 
     public SyncService(EntityManager em, EstanqueRepository estanques, LoteRepository lotes,
-            AlertaRepository alertas, DispositivoRepository dispositivos, Reglas reglas,
-            ObjectMapper mapper, Validator validator) {
+            AlertaRepository alertas, DispositivoRepository dispositivos, IngestaEventos eventos) {
         this.em = em;
         this.estanques = estanques;
         this.lotes = lotes;
         this.alertas = alertas;
         this.dispositivos = dispositivos;
-        this.reglas = reglas;
-        this.mapper = mapper;
-        this.validator = validator;
+        this.eventos = eventos;
     }
 
     /** Resultado que se va llenando durante el push. */
@@ -86,19 +68,31 @@ public class SyncService {
         int alertasGeneradas = 0;
     }
 
-    private static class EventoInvalido extends Exception {
-        EventoInvalido(String mensaje) {
-            super(mensaje);
-        }
-    }
-
     @Transactional
     public PushRespuesta push(PushPeticion peticion) {
         Instant servidorEn = Reloj.ahora();
         Resultado r = new Resultado();
         registrarDispositivo(peticion.dispositivoId(), servidorEn);
 
-        for (EstanqueSync e : lista(peticion.estanques())) {
+        fusionarEstanques(lista(peticion.estanques()), r);
+        em.flush();
+        fusionarLotes(lista(peticion.lotes()), r);
+        // Se vacía antes de los eventos: alguno puede apuntar a un lote que llegó en este mismo push
+        em.flush();
+
+        IngestaEventos.Resultado ingesta = eventos.ingerir(lista(peticion.eventos()),
+                peticion.dispositivoId(), servidorEn);
+        r.aceptados.addAll(ingesta.aceptados());
+        r.duplicados.addAll(ingesta.duplicados());
+        r.rechazados.addAll(ingesta.rechazados());
+        r.alertasGeneradas += ingesta.alertasGeneradas();
+
+        anotarEnLaBitacora(peticion.dispositivoId(), r, servidorEn);
+        return new PushRespuesta(r.aceptados, r.duplicados, r.obsoletos, r.rechazados, r.alertasGeneradas, servidorEn);
+    }
+
+    private void fusionarEstanques(List<EstanqueSync> entrantes, Resultado r) {
+        for (EstanqueSync e : entrantes) {
             String error = Fechas.errorFechaDispositivo(e.actualizadoEn());
             if (error != null) {
                 r.rechazados.add(new Rechazo(e.id().toString(), "actualizado_en: " + error));
@@ -127,9 +121,10 @@ public class SyncService {
             }
             r.aceptados.add(e.id());
         }
-        em.flush();
+    }
 
-        for (LoteSync l : lista(peticion.lotes())) {
+    private void fusionarLotes(List<LoteSync> entrantes, Resultado r) {
+        for (LoteSync l : entrantes) {
             String error = Fechas.errorFechaDispositivo(l.actualizadoEn());
             if (error != null) {
                 r.rechazados.add(new Rechazo(l.id().toString(), "actualizado_en: " + error));
@@ -166,60 +161,6 @@ public class SyncService {
             }
             r.aceptados.add(l.id());
         }
-        em.flush();
-
-        Set<UUID> padresConocidos = new HashSet<>();
-        for (JsonNode crudo : lista(peticion.eventos())) {
-            Entrada evento;
-            try {
-                evento = leerEvento(crudo);
-            } catch (EventoInvalido ex) {
-                r.rechazados.add(new Rechazo(idCrudo(crudo), ex.getMessage()));
-                continue;
-            }
-
-            if (!padresConocidos.contains(evento.padreId())) {
-                Class<?> clasePadre = evento.padreEsEstanque() ? Estanque.class : Lote.class;
-                if (em.find(clasePadre, evento.padreId()) == null) {
-                    String campo = evento.padreEsEstanque() ? "estanque_id" : "lote_id";
-                    r.rechazados.add(new Rechazo(evento.id().toString(), campo + ": no existe"));
-                    continue;
-                }
-                padresConocidos.add(evento.padreId());
-            }
-
-            Evento entidad = evento.aEntidad();
-            if (em.find(entidad.getClass(), evento.id()) != null) {
-                r.duplicados.add(evento.id());
-                continue;
-            }
-            entidad.setId(evento.id());
-            entidad.setDispositivoId(peticion.dispositivoId());
-            entidad.setOrigen(evento.origen() != null ? evento.origen() : "manual");
-            entidad.setRegistradoEn(evento.registradoEn().toInstant());
-            entidad.setRecibidoEn(servidorEn);
-            em.persist(entidad);
-            r.aceptados.add(evento.id());
-
-            if (evento instanceof LecturaAguaEntrada lectura) {
-                for (Reglas.Resultado regla : reglas.evaluarLectura(lectura.tempC(), lectura.ph(), lectura.oxigenoMgL())) {
-                    Alerta alerta = new Alerta();
-                    alerta.setEstanqueId(lectura.estanqueId());
-                    alerta.setLecturaId(lectura.id());
-                    alerta.setDisparadaPor("lectura_agua");
-                    alerta.setVariable(regla.variable());
-                    alerta.setValor(regla.valor());
-                    alerta.setNivel(regla.nivel());
-                    alerta.setMensaje(regla.mensaje());
-                    alerta.setMedidoEn(lectura.registradoEn().toInstant());
-                    em.persist(alerta);
-                    r.alertasGeneradas++;
-                }
-            }
-        }
-
-        anotarEnLaBitacora(peticion.dispositivoId(), r, servidorEn);
-        return new PushRespuesta(r.aceptados, r.duplicados, r.obsoletos, r.rechazados, r.alertasGeneradas, servidorEn);
     }
 
     /** desde es el servidor_en que devolvió el pull anterior. Sin él, baja todo. */
@@ -299,59 +240,6 @@ public class SyncService {
         return lotes.findByEstanqueIdAndCodigo(estanqueId, codigo)
                 .filter(otro -> !otro.getId().equals(id))
                 .isPresent();
-    }
-
-    private Entrada leerEvento(JsonNode crudo) throws EventoInvalido {
-        if (crudo == null || !crudo.isObject()) {
-            throw new EventoInvalido("el evento debe ser un objeto JSON");
-        }
-        Class<? extends Entrada> clase = Eventos.TIPOS.get(crudo.path("tipo").asText(""));
-        if (clase == null) {
-            throw new EventoInvalido("tipo: debe ser uno de " + String.join(", ", Eventos.TIPOS.keySet()));
-        }
-
-        Entrada evento;
-        try {
-            evento = mapper.treeToValue(crudo, clase);
-        } catch (JsonProcessingException ex) {
-            throw new EventoInvalido(campoConError(ex) + ": formato no válido");
-        }
-
-        Set<ConstraintViolation<Entrada>> violaciones = validator.validate(evento);
-        if (!violaciones.isEmpty()) {
-            ConstraintViolation<Entrada> v = violaciones.stream()
-                    .min(Comparator.comparing(x -> x.getPropertyPath().toString()))
-                    .get();
-            throw new EventoInvalido(aSnake(v.getPropertyPath().toString()) + ": " + v.getMessage());
-        }
-
-        String error = Fechas.errorFechaDispositivo(evento.registradoEn());
-        if (error != null) {
-            throw new EventoInvalido("registrado_en: " + error);
-        }
-        error = evento.errorExtra();
-        if (error != null) {
-            throw new EventoInvalido(error);
-        }
-        return evento;
-    }
-
-    private static String campoConError(JsonProcessingException ex) {
-        if (ex instanceof MismatchedInputException m && !m.getPath().isEmpty()) {
-            String campo = m.getPath().get(m.getPath().size() - 1).getFieldName();
-            if (campo != null) {
-                return campo;
-            }
-        }
-        return "evento";
-    }
-
-    private static String aSnake(String camel) {
-        return camel.replaceAll("([a-z0-9])([A-Z])", "$1_$2").toLowerCase();
-    }
-
-    private static String idCrudo(JsonNode crudo) {
-        return crudo != null && crudo.hasNonNull("id") ? crudo.get("id").asText() : null;
     }
 
     private static <T> List<T> lista(List<T> l) {
