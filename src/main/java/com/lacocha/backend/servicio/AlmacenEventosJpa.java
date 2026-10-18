@@ -20,5 +20,9 @@ import jakarta.persistence.EntityManager;
 @Component
 public class AlmacenEventosJpa implements AlmacenEventos {
     private final EntityManager em;
+
+    public AlmacenEventosJpa(EntityManager em) {
+        this.em = em;
+    }
 }
 
