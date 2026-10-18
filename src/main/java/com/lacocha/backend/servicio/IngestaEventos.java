@@ -40,5 +40,7 @@ public class IngestaEventos {
     private final AlmacenEventos almacen;
 
     private final AdaptadorJsonPush adaptador;
+
+    private final IngestoresEventos ingestores;
 }
 
