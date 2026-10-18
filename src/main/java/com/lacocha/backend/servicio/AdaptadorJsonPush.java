@@ -82,5 +82,7 @@ public class AdaptadorJsonPush {
         }
         return evento;
     }
+
+    /** El id de una trama que no se pudo ni leer, para que el celular igual sepa cuál fue. */
 }
 
