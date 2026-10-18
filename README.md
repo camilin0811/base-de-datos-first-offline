@@ -23,6 +23,23 @@ src/main/resources/db/
 └── semilla/       Datos de ejemplo (no los aplica Flyway)
 ```
 
+## Patrones de diseño
+
+`SyncService.push()` hacía cuatro trabajos en un solo método: registrar el dispositivo, fusionar
+estanques, fusionar lotes y guardar los eventos con sus alertas. Los cinco patrones están puestos
+en esas costuras, no de adorno. Hoy ese método tiene 21 líneas.
+
+| Patrón | Dónde | Qué problema resuelve |
+|---|---|---|
+| **Facade** | `servicio/PisciculturaFacade.java` | Los cinco controladores inyectaban cinco servicios distintos. Ahora inyectan uno. Un controlador solo tiene que saber su ruta, su JSON y a qué caso de uso llamar; en qué servicio vive ese caso de uso no es asunto suyo. |
+| **Adapter** | `servicio/AdaptadorJsonPush.java` | El celular y el ESP32 suben los eventos como JSON sin tipo: una trama del contador llega como un objeto cuyo campo `tipo` es la única pista de qué es. Este es el único lugar que la convierte en un record ya validado, y el que nombra el campo que falló como lo nombra el JSON y no como lo nombra Java. Los estanques y los lotes no pasan por aquí: esos llegan ya tipados en la petición. |
+| **Factory Method** | `servicio/IngestoresEventos.java` | Antes un `instanceof LecturaAguaEntrada` enterrado en el push decidía quién dispara alertas. Ahora cada subclase de `Fabrica` responde por un `tipo` del protocolo y decide quién lo atiende. Aceptar una clase nueva de evento es agregar una subclase y registrarla. Es además la **única** lista de las etiquetas del protocolo: `Eventos.TIPOS` desapareció. |
+| **Bridge** | `servicio/AlmacenEventos.java` + `AlmacenEventosJpa.java` | `IngestaEventos` tiene las reglas de qué se acepta, qué es duplicado y qué se rechaza, y sostiene un `AlmacenEventos` sin saber nunca cuál es. Nunca ve un `EntityManager`. Eso es lo que permite probar esas reglas sin base de datos (ver *Pruebas automáticas*). |
+| **Decorator** | `servicio/DecoradoresAlmacenEventos.java` | Dos capacidades transversales que se envuelven desde fuera y se apilan. `ConteoPorOrigen` cuenta lo guardado por `origen` y lo deja en el log (`eventos de cel-cuidador-1: contador=120, manual=3`): la tesis compara el contador de alevinos contra el conteo a mano, y eso lo responde sin una consulta. `Rastro` escribe una línea por evento y **solo se envuelve si su nivel está en DEBUG**, porque un push trae hasta 500. |
+
+Los decoradores se construyen en cada push, no una sola vez: una cuenta por `origen` que sumara dos
+pushes distintos no diría nada.
+
 ## Correr en local
 
 No hace falta Neon: en local usa una base H2 en la carpeta `data/`.
