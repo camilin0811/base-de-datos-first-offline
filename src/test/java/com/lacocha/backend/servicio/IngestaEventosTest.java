@@ -103,5 +103,7 @@ class IngestaEventosTest {
             ingestores);
 
     private static final Instant SERVIDOR_EN = Instant.parse("2026-10-18T21:00:00Z");
+
+    private static final String REGISTRADO_EN = "2026-10-18T15:30:00-05:00";
 }
 
