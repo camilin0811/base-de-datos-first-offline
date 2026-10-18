@@ -70,5 +70,16 @@ class IngestaEventosTest {
     }
 
     /** Umbral fijo: esta prueba es de la tubería, no de qué es buena agua para una trucha. */
+
+    private static final Reglas REGLAS = new Reglas(null, null, null) {
+        @Override
+        public List<Resultado> evaluarLectura(Double tempC, Double ph, Double oxigenoMgL) {
+            if (tempC == null || tempC <= 18.0) {
+                return List.of();
+            }
+            return List.of(new Resultado("temp_c", tempC, "critica",
+                    "Temperatura alta: " + tempC + " °C (óptimo 10–16 °C)"));
+        }
+    };
 }
 
