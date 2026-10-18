@@ -93,5 +93,7 @@ class IngestaEventosTest {
             .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .build();
+
+    private final AlmacenEnMemoria almacen = new AlmacenEnMemoria();
 }
 
