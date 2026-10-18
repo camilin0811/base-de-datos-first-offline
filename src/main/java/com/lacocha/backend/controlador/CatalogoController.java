@@ -20,7 +20,7 @@ import com.lacocha.backend.dto.Catalogo.EstanqueSalida;
 import com.lacocha.backend.dto.Catalogo.LoteCrear;
 import com.lacocha.backend.dto.Catalogo.LoteEditar;
 import com.lacocha.backend.dto.Catalogo.LoteSalida;
-import com.lacocha.backend.servicio.CatalogoService;
+import com.lacocha.backend.servicio.PisciculturaFacade;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -30,43 +30,43 @@ import jakarta.validation.Valid;
 @Tag(name = "Catálogo")
 public class CatalogoController {
 
-    private final CatalogoService servicio;
+    private final PisciculturaFacade facade;
 
-    public CatalogoController(CatalogoService servicio) {
-        this.servicio = servicio;
+    public CatalogoController(PisciculturaFacade facade) {
+        this.facade = facade;
     }
 
     @GetMapping("/estanques")
     public List<EstanqueSalida> listarEstanques() {
-        return servicio.listarEstanques();
+        return facade.listarEstanques();
     }
 
     @PostMapping("/estanques")
     @ResponseStatus(HttpStatus.CREATED)
     public EstanqueSalida crearEstanque(@Valid @RequestBody EstanqueCrear datos) {
-        return servicio.crearEstanque(datos);
+        return facade.crearEstanque(datos);
     }
 
     @PatchMapping("/estanques/{id}")
     public EstanqueSalida editarEstanque(@PathVariable UUID id, @Valid @RequestBody EstanqueEditar datos) {
-        return servicio.editarEstanque(id, datos);
+        return facade.editarEstanque(id, datos);
     }
 
     @GetMapping("/lotes")
     public List<LoteSalida> listarLotes(
             @RequestParam(name = "estanque_id", required = false) UUID estanqueId,
             @RequestParam(required = false) String estado) {
-        return servicio.listarLotes(estanqueId, estado);
+        return facade.listarLotes(estanqueId, estado);
     }
 
     @PostMapping("/lotes")
     @ResponseStatus(HttpStatus.CREATED)
     public LoteSalida crearLote(@Valid @RequestBody LoteCrear datos) {
-        return servicio.crearLote(datos);
+        return facade.crearLote(datos);
     }
 
     @PatchMapping("/lotes/{id}")
     public LoteSalida editarLote(@PathVariable UUID id, @Valid @RequestBody LoteEditar datos) {
-        return servicio.editarLote(id, datos);
+        return facade.editarLote(id, datos);
     }
 }
