@@ -95,5 +95,7 @@ class IngestaEventosTest {
             .build();
 
     private final AlmacenEnMemoria almacen = new AlmacenEnMemoria();
+
+    private final IngestoresEventos ingestores = new IngestoresEventos(REGLAS);
 }
 
