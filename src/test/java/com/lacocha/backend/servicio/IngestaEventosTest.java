@@ -87,5 +87,11 @@ class IngestaEventosTest {
      * nombres que fija application.properties (sin ella "temp_c" no mapearía) y las propiedades
      * desconocidas ignoradas, porque cada trama trae un campo "tipo" que ningún record declara.
      */
+
+    private final ObjectMapper mapper = JsonMapper.builder()
+            .addModule(new JavaTimeModule())
+            .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
 }
 
