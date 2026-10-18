@@ -124,5 +124,12 @@ class IngestaEventosTest {
                  "lote_id":"%s","total":%d,"cortes_multiples":2}
                 """.formatted(id, REGISTRADO_EN, loteId, total));
     }
+
+    private JsonNode lectura(UUID id, double tempC) {
+        return json("""
+                {"tipo":"lectura_agua","id":"%s","registrado_en":"%s","origen":"sensor",
+                 "estanque_id":"%s","temp_c":%s}
+                """.formatted(id, REGISTRADO_EN, estanqueId, tempC));
+    }
 }
 
