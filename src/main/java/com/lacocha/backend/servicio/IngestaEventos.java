@@ -36,5 +36,7 @@ public class IngestaEventos {
     public record Resultado(List<UUID> aceptados, List<UUID> duplicados, List<Rechazo> rechazados,
             int alertasGeneradas) {
     }
+
+    private final AlmacenEventos almacen;
 }
 
