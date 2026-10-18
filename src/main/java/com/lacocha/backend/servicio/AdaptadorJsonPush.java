@@ -88,5 +88,7 @@ public class AdaptadorJsonPush {
     public static String idCrudo(JsonNode crudo) {
         return crudo != null && crudo.hasNonNull("id") ? crudo.get("id").asText() : null;
     }
+
+    /** Jackson ya reporta la ruta con los nombres del JSON. */
 }
 
