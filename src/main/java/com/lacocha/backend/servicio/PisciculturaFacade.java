@@ -68,5 +68,9 @@ public class PisciculturaFacade {
     public EstanqueSalida editarEstanque(UUID id, EstanqueEditar datos) {
         return catalogo.editarEstanque(id, datos);
     }
+
+    public List<LoteSalida> listarLotes(UUID estanqueId, String estado) {
+        return catalogo.listarLotes(estanqueId, estado);
+    }
 }
 
