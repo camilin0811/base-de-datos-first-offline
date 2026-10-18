@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.lacocha.backend.dto.Consultas.LecturaAguaSalida;
 import com.lacocha.backend.dto.Consultas.ResumenLote;
 import com.lacocha.backend.dto.Sync.AlertaSalida;
-import com.lacocha.backend.servicio.ConsultaService;
+import com.lacocha.backend.servicio.PisciculturaFacade;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,10 +25,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Consultas")
 public class ConsultaController {
 
-    private final ConsultaService servicio;
+    private final PisciculturaFacade facade;
 
-    public ConsultaController(ConsultaService servicio) {
-        this.servicio = servicio;
+    public ConsultaController(PisciculturaFacade facade) {
+        this.facade = facade;
     }
 
     @GetMapping("/estanques/{id}/lecturas")
@@ -38,7 +38,7 @@ public class ConsultaController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime hasta,
             @RequestParam(defaultValue = "500") int limite) {
-        return servicio.lecturasEstanque(id,
+        return facade.lecturasEstanque(id,
                 desde != null ? desde.toInstant() : null,
                 hasta != null ? hasta.toInstant() : null,
                 limite);
@@ -47,7 +47,7 @@ public class ConsultaController {
     @GetMapping("/lotes/{id}/resumen")
     @Operation(summary = "Población, supervivencia, biomasa y ración sugerida del lote")
     public ResumenLote resumen(@PathVariable UUID id) {
-        return servicio.resumenLote(id);
+        return facade.resumenLote(id);
     }
 
     @GetMapping("/alertas")
@@ -55,7 +55,7 @@ public class ConsultaController {
             @RequestParam(defaultValue = "true") boolean pendientes,
             @RequestParam(name = "estanque_id", required = false) UUID estanqueId,
             @RequestParam(defaultValue = "100") int limite) {
-        return servicio.listarAlertas(pendientes, estanqueId, limite);
+        return facade.listarAlertas(pendientes, estanqueId, limite);
     }
 
     @PostMapping("/alertas/{id}/atender")
@@ -63,6 +63,6 @@ public class ConsultaController {
     public AlertaSalida atender(
             @PathVariable UUID id,
             @RequestParam(name = "dispositivo_id", required = false) String dispositivoId) {
-        return servicio.atenderAlerta(id, dispositivoId != null ? dispositivoId : "panel");
+        return facade.atenderAlerta(id, dispositivoId != null ? dispositivoId : "panel");
     }
 }
