@@ -137,5 +137,9 @@ public class IngestoresEventos {
     }
 
     /** LinkedHashMap para que el mensaje de error liste las etiquetas siempre en el mismo orden. */
+
+    private final Map<String, Fabrica> porTipo = new LinkedHashMap<>();
+
+    private final Map<Class<? extends Entrada>, Fabrica> porClase = new LinkedHashMap<>();
 }
 
