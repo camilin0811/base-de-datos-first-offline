@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.lacocha.backend.dto.Sync.PullRespuesta;
 import com.lacocha.backend.dto.Sync.PushPeticion;
 import com.lacocha.backend.dto.Sync.PushRespuesta;
-import com.lacocha.backend.servicio.SyncService;
+import com.lacocha.backend.servicio.PisciculturaFacade;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,22 +24,22 @@ import jakarta.validation.Valid;
 @Tag(name = "Sincronización")
 public class SyncController {
 
-    private final SyncService servicio;
+    private final PisciculturaFacade facade;
 
-    public SyncController(SyncService servicio) {
-        this.servicio = servicio;
+    public SyncController(PisciculturaFacade facade) {
+        this.facade = facade;
     }
 
     @PostMapping("/push")
     @Operation(summary = "El celular sube su cola de pendientes (idempotente)")
     public PushRespuesta push(@Valid @RequestBody PushPeticion peticion) {
-        return servicio.push(peticion);
+        return facade.push(peticion);
     }
 
     @GetMapping("/pull")
     @Operation(summary = "El celular baja cambios del catálogo y alertas pendientes")
     public PullRespuesta pull(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime desde) {
-        return servicio.pull(desde != null ? desde.toInstant() : null);
+        return facade.pull(desde != null ? desde.toInstant() : null);
     }
 }
