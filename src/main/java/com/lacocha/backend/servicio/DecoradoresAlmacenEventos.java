@@ -17,11 +17,11 @@ import com.lacocha.backend.modelo.Evento;
  * tubería de ingesta ni el almacén JPA saben que están ahí, y apagar una es no envolverla.
  */
 public final class DecoradoresAlmacenEventos {
+
     private DecoradoresAlmacenEventos() {
     }
 
     /** Base: un AlmacenEventos que envuelve a otro y reenvía todo sin tocarlo. */
-
     public abstract static class Decorador implements AlmacenEventos {
 
         protected final AlmacenEventos interno;
@@ -56,7 +56,6 @@ public final class DecoradoresAlmacenEventos {
      * nivel está realmente encendido (ver encendido()). Existe para responder la pregunta que
      * siempre sale en campo: "la app dice que lo subió, ¿está o no está?".
      */
-
     public static final class Rastro extends Decorador {
 
         private static final Logger log = LoggerFactory.getLogger(Rastro.class);
@@ -83,5 +82,25 @@ public final class DecoradoresAlmacenEventos {
      * mano, y esto responde cuánto de lo que llegó lo midió la máquina sin tener que consultar la
      * base. Vive un solo push: una cuenta que sumara dos pushes distintos no diría nada.
      */
-}
+    public static final class ConteoPorOrigen extends Decorador {
 
+        private final Map<String, Integer> porOrigen = new TreeMap<>();
+
+        public ConteoPorOrigen(AlmacenEventos interno) {
+            super(interno);
+        }
+
+        @Override
+        public void guardar(Evento evento) {
+            interno.guardar(evento);
+            porOrigen.merge(evento.getOrigen(), 1, Integer::sum);
+        }
+
+        /** "contador=120, manual=3". Vacío cuando el push no trajo eventos. */
+        public String resumen() {
+            return porOrigen.entrySet().stream()
+                    .map(entrada -> entrada.getKey() + "=" + entrada.getValue())
+                    .collect(Collectors.joining(", "));
+        }
+    }
+}
