@@ -45,5 +45,14 @@ public class PisciculturaFacade {
     private final DispositivoService dispositivos;
 
     private final ParametroService parametros;
+
+    public PisciculturaFacade(CatalogoService catalogo, ConsultaService consultas, SyncService sync,
+            DispositivoService dispositivos, ParametroService parametros) {
+        this.catalogo = catalogo;
+        this.consultas = consultas;
+        this.sync = sync;
+        this.dispositivos = dispositivos;
+        this.parametros = parametros;
+    }
 }
 
