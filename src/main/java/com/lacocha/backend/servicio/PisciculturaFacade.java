@@ -100,5 +100,11 @@ public class PisciculturaFacade {
     public AlertaSalida atenderAlerta(UUID id, String quien) {
         return consultas.atenderAlerta(id, quien);
     }
+
+    // ---------- Sincronización con los celulares ----------
+
+    public PushRespuesta push(PushPeticion peticion) {
+        return sync.push(peticion);
+    }
 }
 
