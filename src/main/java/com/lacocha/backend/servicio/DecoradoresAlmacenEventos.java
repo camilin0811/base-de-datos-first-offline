@@ -21,5 +21,34 @@ public final class DecoradoresAlmacenEventos {
     }
 
     /** Base: un AlmacenEventos que envuelve a otro y reenvía todo sin tocarlo. */
+
+    public abstract static class Decorador implements AlmacenEventos {
+
+        protected final AlmacenEventos interno;
+
+        protected Decorador(AlmacenEventos interno) {
+            this.interno = interno;
+        }
+
+        @Override
+        public boolean existe(Evento evento) {
+            return interno.existe(evento);
+        }
+
+        @Override
+        public void guardar(Evento evento) {
+            interno.guardar(evento);
+        }
+
+        @Override
+        public boolean existePadre(boolean padreEsEstanque, UUID padreId) {
+            return interno.existePadre(padreEsEstanque, padreId);
+        }
+
+        @Override
+        public int guardarAlertas(List<Alerta> alertas) {
+            return interno.guardarAlertas(alertas);
+        }
+    }
 }
 
