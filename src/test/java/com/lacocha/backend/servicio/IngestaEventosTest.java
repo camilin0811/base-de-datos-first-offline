@@ -153,5 +153,18 @@ class IngestaEventosTest {
         assertThat(guardado.getRecibidoEn()).isEqualTo(SERVIDOR_EN);
         assertThat(guardado.getRegistradoEn()).isEqualTo(OffsetDateTime.parse(REGISTRADO_EN).toInstant());
     }
+
+    @Test
+    void elMismoEventoDosVecesEsDuplicadoYSeGuardaUnaVez() {
+        almacen.padres.add(loteId);
+        UUID id = UUID.randomUUID();
+
+        assertThat(ingerir(conteo(id, 500)).aceptados()).containsExactly(id);
+        IngestaEventos.Resultado reintento = ingerir(conteo(id, 500));
+
+        assertThat(reintento.duplicados()).containsExactly(id);
+        assertThat(reintento.aceptados()).isEmpty();
+        assertThat(almacen.guardados).hasSize(1);
+    }
 }
 
