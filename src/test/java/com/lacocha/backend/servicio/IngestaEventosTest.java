@@ -117,5 +117,12 @@ class IngestaEventosTest {
             throw new IllegalArgumentException(ex);
         }
     }
+
+    private JsonNode conteo(UUID id, int total) {
+        return json("""
+                {"tipo":"conteo","id":"%s","registrado_en":"%s","origen":"contador",
+                 "lote_id":"%s","total":%d,"cortes_multiples":2}
+                """.formatted(id, REGISTRADO_EN, loteId, total));
+    }
 }
 
