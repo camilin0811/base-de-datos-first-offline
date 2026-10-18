@@ -118,5 +118,9 @@ public class PisciculturaFacade {
     public DispositivoSalida editarDispositivo(String id, DispositivoEditar datos) {
         return dispositivos.editar(id, datos);
     }
+
+    public List<SincronizacionSalida> sincronizaciones(String dispositivoId) {
+        return dispositivos.sincronizaciones(dispositivoId);
+    }
 }
 
