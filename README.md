@@ -15,6 +15,7 @@ src/main/java/com/lacocha/backend/
 ├── repositorio/   Consultas a la base de datos (Spring Data)
 ├── dto/           Lo que entra y sale de la API (records)
 ├── servicio/      Lógica: sincronización, resumen del lote y reglas (sistema experto)
+│                  PisciculturaFacade es la única puerta que usan los controladores
 └── controlador/   Rutas REST y manejo de errores
 src/main/resources/db/
 ├── migration/     Migraciones de Flyway comunes a los dos motores
