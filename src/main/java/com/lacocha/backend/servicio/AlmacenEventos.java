@@ -16,5 +16,7 @@ import com.lacocha.backend.modelo.Evento;
  */
 public interface AlmacenEventos {
     /** true cuando ya hay un evento con ese id: el celular reintentó tras perder la señal. */
+
+    boolean existe(Evento evento);
 }
 
