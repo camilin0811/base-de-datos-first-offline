@@ -141,5 +141,18 @@ public class IngestoresEventos {
     private final Map<String, Fabrica> porTipo = new LinkedHashMap<>();
 
     private final Map<Class<? extends Entrada>, Fabrica> porClase = new LinkedHashMap<>();
+
+    public IngestoresEventos(Reglas reglas) {
+        registrar(new LecturasAgua(reglas));
+        registrar(new Llano("conteo", ConteoEntrada.class));
+        registrar(new Llano("mortalidad", MortalidadEntrada.class));
+        registrar(new Llano("alimentacion", AlimentacionEntrada.class));
+        registrar(new Llano("biometria", BiometriaEntrada.class));
+    }
+
+    private void registrar(Fabrica fabrica) {
+        porTipo.put(fabrica.tipo(), fabrica);
+        porClase.put(fabrica.claseEntrada(), fabrica);
+    }
 }
 
