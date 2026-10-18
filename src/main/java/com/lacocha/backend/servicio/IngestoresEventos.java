@@ -60,5 +60,37 @@ public class IngestoresEventos {
     }
 
     /** Los eventos que solo se guardan: conteo, mortalidad, alimentación y biometría. */
+
+    public static final class Llano extends Fabrica {
+
+        private final String tipo;
+        private final Class<? extends Entrada> claseEntrada;
+
+        public Llano(String tipo, Class<? extends Entrada> claseEntrada) {
+            this.tipo = tipo;
+            this.claseEntrada = claseEntrada;
+        }
+
+        @Override
+        public String tipo() {
+            return tipo;
+        }
+
+        @Override
+        public Class<? extends Entrada> claseEntrada() {
+            return claseEntrada;
+        }
+
+        @Override
+        protected Ingestor crearIngestor() {
+            return (evento, almacen) -> 0;
+        }
+    }
+
+    /**
+     * Una lectura de agua además corre el sistema experto. La alerta tiene que levantarse en la
+     * misma transacción que guardó la lectura: si no, un push que se revierte dejaría una alerta
+     * apuntando a una lectura que nadie tiene.
+     */
 }
 
