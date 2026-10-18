@@ -72,5 +72,9 @@ public class PisciculturaFacade {
     public List<LoteSalida> listarLotes(UUID estanqueId, String estado) {
         return catalogo.listarLotes(estanqueId, estado);
     }
+
+    public LoteSalida crearLote(LoteCrear datos) {
+        return catalogo.crearLote(datos);
+    }
 }
 
