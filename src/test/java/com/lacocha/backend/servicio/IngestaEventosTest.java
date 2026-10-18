@@ -131,5 +131,9 @@ class IngestaEventosTest {
                  "estanque_id":"%s","temp_c":%s}
                 """.formatted(id, REGISTRADO_EN, estanqueId, tempC));
     }
+
+    private IngestaEventos.Resultado ingerir(JsonNode... tramas) {
+        return ingesta.ingerir(List.of(tramas), "cel-prueba", SERVIDOR_EN);
+    }
 }
 
