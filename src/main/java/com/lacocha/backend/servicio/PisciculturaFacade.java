@@ -64,5 +64,9 @@ public class PisciculturaFacade {
     public EstanqueSalida crearEstanque(EstanqueCrear datos) {
         return catalogo.crearEstanque(datos);
     }
+
+    public EstanqueSalida editarEstanque(UUID id, EstanqueEditar datos) {
+        return catalogo.editarEstanque(id, datos);
+    }
 }
 
