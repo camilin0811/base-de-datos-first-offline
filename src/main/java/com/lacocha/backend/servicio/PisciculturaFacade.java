@@ -76,5 +76,9 @@ public class PisciculturaFacade {
     public LoteSalida crearLote(LoteCrear datos) {
         return catalogo.crearLote(datos);
     }
+
+    public LoteSalida editarLote(UUID id, LoteEditar datos) {
+        return catalogo.editarLote(id, datos);
+    }
 }
 
