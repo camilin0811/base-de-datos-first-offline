@@ -80,5 +80,11 @@ public class PisciculturaFacade {
     public LoteSalida editarLote(UUID id, LoteEditar datos) {
         return catalogo.editarLote(id, datos);
     }
+
+    // ---------- Lectura de los eventos que subieron los dispositivos ----------
+
+    public List<LecturaAguaSalida> lecturasEstanque(UUID estanqueId, Instant desde, Instant hasta, int limite) {
+        return consultas.lecturasEstanque(estanqueId, desde, hasta, limite);
+    }
 }
 
