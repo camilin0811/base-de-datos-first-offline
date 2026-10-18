@@ -35,5 +35,38 @@ import jakarta.validation.Validation;
  */
 class IngestaEventosTest {
     /** Implementador del Bridge para las pruebas. */
+
+    static final class AlmacenEnMemoria implements AlmacenEventos {
+
+        final Map<String, Evento> guardados = new LinkedHashMap<>();
+        final List<Alerta> alertas = new ArrayList<>();
+        final Set<UUID> padres = new HashSet<>();
+
+        /** Cada clase de evento tiene su tabla, así que la llave es la tabla y el id, no el id solo. */
+        private static String llave(Evento evento) {
+            return evento.getClass().getSimpleName() + ":" + evento.getId();
+        }
+
+        @Override
+        public boolean existe(Evento evento) {
+            return guardados.containsKey(llave(evento));
+        }
+
+        @Override
+        public void guardar(Evento evento) {
+            guardados.put(llave(evento), evento);
+        }
+
+        @Override
+        public boolean existePadre(boolean padreEsEstanque, UUID padreId) {
+            return padres.contains(padreId);
+        }
+
+        @Override
+        public int guardarAlertas(List<Alerta> candidatas) {
+            alertas.addAll(candidatas);
+            return candidatas.size();
+        }
+    }
 }
 
