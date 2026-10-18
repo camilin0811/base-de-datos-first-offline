@@ -43,5 +43,7 @@ public class PisciculturaFacade {
     private final SyncService sync;
 
     private final DispositivoService dispositivos;
+
+    private final ParametroService parametros;
 }
 
