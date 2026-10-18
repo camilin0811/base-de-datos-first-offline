@@ -33,5 +33,7 @@ public class AdaptadorJsonPush {
             super(mensaje);
         }
     }
+
+    private final ObjectMapper mapper;
 }
 
