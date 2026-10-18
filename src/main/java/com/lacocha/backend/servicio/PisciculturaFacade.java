@@ -106,5 +106,9 @@ public class PisciculturaFacade {
     public PushRespuesta push(PushPeticion peticion) {
         return sync.push(peticion);
     }
+
+    public PullRespuesta pull(Instant desde) {
+        return sync.pull(desde);
+    }
 }
 
