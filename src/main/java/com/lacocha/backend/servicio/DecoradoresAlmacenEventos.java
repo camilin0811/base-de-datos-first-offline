@@ -56,5 +56,26 @@ public final class DecoradoresAlmacenEventos {
      * nivel está realmente encendido (ver encendido()). Existe para responder la pregunta que
      * siempre sale en campo: "la app dice que lo subió, ¿está o no está?".
      */
+
+    public static final class Rastro extends Decorador {
+
+        private static final Logger log = LoggerFactory.getLogger(Rastro.class);
+
+        public Rastro(AlmacenEventos interno) {
+            super(interno);
+        }
+
+        /** Permite que la tubería no envuelva nada cuando nadie va a leer el rastro. */
+        public static boolean encendido() {
+            return log.isDebugEnabled();
+        }
+
+        @Override
+        public void guardar(Evento evento) {
+            interno.guardar(evento);
+            log.debug("guardado {} {} de {} (origen {})", evento.getClass().getSimpleName(),
+                    evento.getId(), evento.getDispositivoId(), evento.getOrigen());
+        }
+    }
 }
 
