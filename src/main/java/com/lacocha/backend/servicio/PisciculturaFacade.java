@@ -110,5 +110,9 @@ public class PisciculturaFacade {
     public PullRespuesta pull(Instant desde) {
         return sync.pull(desde);
     }
+
+    public List<DispositivoSalida> listarDispositivos() {
+        return dispositivos.listar();
+    }
 }
 
