@@ -1,8 +1,6 @@
 package com.lacocha.backend.dto;
 
 import java.time.OffsetDateTime;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import com.lacocha.backend.modelo.Alimentacion;
@@ -19,7 +17,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/** Eventos que sube el celular. El campo "tipo" del JSON decide cuál de estos records se usa. */
+/**
+ * Eventos que sube el celular. El campo "tipo" del JSON decide cuál de estos records se usa; qué
+ * etiqueta corresponde a cuál record lo decide IngestoresEventos, la única lista de las etiquetas.
+ */
 public final class Eventos {
 
     private Eventos() {
@@ -47,17 +48,6 @@ public final class Eventos {
         default String errorExtra() {
             return null;
         }
-    }
-
-    /** tipo del JSON -> record. LinkedHashMap para que el mensaje de error salga en orden. */
-    public static final Map<String, Class<? extends Entrada>> TIPOS = new LinkedHashMap<>();
-
-    static {
-        TIPOS.put("lectura_agua", LecturaAguaEntrada.class);
-        TIPOS.put("conteo", ConteoEntrada.class);
-        TIPOS.put("mortalidad", MortalidadEntrada.class);
-        TIPOS.put("alimentacion", AlimentacionEntrada.class);
-        TIPOS.put("biometria", BiometriaEntrada.class);
     }
 
     public record LecturaAguaEntrada(
