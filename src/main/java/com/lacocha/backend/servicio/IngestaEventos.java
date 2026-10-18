@@ -48,5 +48,49 @@ public class IngestaEventos {
         this.adaptador = adaptador;
         this.ingestores = ingestores;
     }
+
+    public Resultado ingerir(List<JsonNode> tramas, String dispositivoId, Instant servidorEn) {
+        List<UUID> aceptados = new ArrayList<>();
+        List<UUID> duplicados = new ArrayList<>();
+        List<Rechazo> rechazados = new ArrayList<>();
+        int alertasGeneradas = 0;
+
+        // Los decoradores viven solo este push: una cuenta que sumara dos pushes no diría nada
+        ConteoPorOrigen cuenta = new ConteoPorOrigen(Rastro.encendido() ? new Rastro(almacen) : almacen);
+        // Un push suele traer muchos eventos del mismo lote; preguntar una vez alcanza
+        Set<UUID> padresConocidos = new HashSet<>();
+
+        for (JsonNode crudo : tramas) {
+            Entrada evento;
+            try {
+                evento = adaptador.leerEvento(crudo);
+            } catch (EventoInvalido ex) {
+                rechazados.add(new Rechazo(AdaptadorJsonPush.idCrudo(crudo), ex.getMessage()));
+                continue;
+            }
+
+            if (!padresConocidos.contains(evento.padreId())
+                    && !cuenta.existePadre(evento.padreEsEstanque(), evento.padreId())) {
+                String campo = evento.padreEsEstanque() ? "estanque_id" : "lote_id";
+                rechazados.add(new Rechazo(evento.id().toString(), campo + ": no existe"));
+                continue;
+            }
+            padresConocidos.add(evento.padreId());
+
+            Evento entidad = sellar(evento, dispositivoId, servidorEn);
+            if (cuenta.existe(entidad)) {
+                duplicados.add(evento.id());
+                continue;
+            }
+            cuenta.guardar(entidad);
+            aceptados.add(evento.id());
+            alertasGeneradas += ingestores.para(evento).despuesDeGuardar(evento, cuenta);
+        }
+
+        if (!aceptados.isEmpty()) {
+            log.info("eventos de {}: {}", dispositivoId, cuenta.resumen());
+        }
+        return new Resultado(aceptados, duplicados, rechazados, alertasGeneradas);
+    }
 }
 
