@@ -39,5 +39,7 @@ public class PisciculturaFacade {
     private final CatalogoService catalogo;
 
     private final ConsultaService consultas;
+
+    private final SyncService sync;
 }
 
