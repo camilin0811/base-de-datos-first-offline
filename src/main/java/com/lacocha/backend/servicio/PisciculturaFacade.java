@@ -54,5 +54,11 @@ public class PisciculturaFacade {
         this.dispositivos = dispositivos;
         this.parametros = parametros;
     }
+
+    // ---------- Catálogo: estanques y lotes, editables desde el panel y desde cualquier celular ----------
+
+    public List<EstanqueSalida> listarEstanques() {
+        return catalogo.listarEstanques();
+    }
 }
 
