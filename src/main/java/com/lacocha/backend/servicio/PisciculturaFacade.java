@@ -114,5 +114,9 @@ public class PisciculturaFacade {
     public List<DispositivoSalida> listarDispositivos() {
         return dispositivos.listar();
     }
+
+    public DispositivoSalida editarDispositivo(String id, DispositivoEditar datos) {
+        return dispositivos.editar(id, datos);
+    }
 }
 
