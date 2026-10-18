@@ -156,5 +156,10 @@ public class IngestoresEventos {
     }
 
     /** null cuando el dispositivo mandó un "tipo" que este servidor no conoce. */
+
+    public Class<? extends Entrada> claseEntrada(String tipo) {
+        Fabrica fabrica = porTipo.get(tipo);
+        return fabrica != null ? fabrica.claseEntrada() : null;
+    }
 }
 
