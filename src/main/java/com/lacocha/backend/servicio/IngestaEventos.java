@@ -32,5 +32,9 @@ public class IngestaEventos {
     private static final Logger log = LoggerFactory.getLogger(IngestaEventos.class);
 
     /** Lo que produjeron los eventos de un push. */
+
+    public record Resultado(List<UUID> aceptados, List<UUID> duplicados, List<Rechazo> rechazados,
+            int alertasGeneradas) {
+    }
 }
 
