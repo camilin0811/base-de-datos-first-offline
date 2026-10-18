@@ -36,5 +36,29 @@ public class IngestoresEventos {
 
      * el adaptador, la tubería y los controladores no cambian.
      */
+
+    public abstract static class Fabrica {
+
+        private Ingestor cache;
+
+        /** La etiqueta que el dispositivo pone en el campo "tipo" del JSON. */
+        public abstract String tipo();
+
+        /** El record en el que el adaptador tiene que leer la trama cruda. */
+        public abstract Class<? extends Entrada> claseEntrada();
+
+        /** El método fábrica. */
+        protected abstract Ingestor crearIngestor();
+
+        /** Se crea una sola vez: un ingestor no guarda estado y un push trae hasta 500 eventos. */
+        public final Ingestor ingestor() {
+            if (cache == null) {
+                cache = crearIngestor();
+            }
+            return cache;
+        }
+    }
+
+    /** Los eventos que solo se guardan: conteo, mortalidad, alimentación y biometría. */
 }
 
