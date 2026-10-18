@@ -166,5 +166,23 @@ class IngestaEventosTest {
         assertThat(reintento.aceptados()).isEmpty();
         assertThat(almacen.guardados).hasSize(1);
     }
+
+    @Test
+    void unEventoHuerfanoSeRechazaSoloYElRestoDeLaColaPasa() {
+        almacen.padres.add(loteId);
+        UUID bueno = UUID.randomUUID();
+        UUID huerfano = UUID.randomUUID();
+        JsonNode otroLote = json("""
+                {"tipo":"conteo","id":"%s","registrado_en":"%s","lote_id":"%s","total":10}
+                """.formatted(huerfano, REGISTRADO_EN, UUID.randomUUID()));
+
+        IngestaEventos.Resultado r = ingerir(otroLote, conteo(bueno, 10));
+
+        assertThat(r.aceptados()).containsExactly(bueno);
+        assertThat(r.rechazados()).singleElement().satisfies(rechazo -> {
+            assertThat(rechazo.id()).isEqualTo(huerfano.toString());
+            assertThat(rechazo.error()).isEqualTo("lote_id: no existe");
+        });
+    }
 }
 
