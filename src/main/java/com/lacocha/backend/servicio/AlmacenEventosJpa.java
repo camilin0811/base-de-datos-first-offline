@@ -30,5 +30,10 @@ public class AlmacenEventosJpa implements AlmacenEventos {
         // Cada clase de evento tiene su propia tabla, así que el id se busca solo en la que toca
         return em.find(evento.getClass(), evento.getId()) != null;
     }
+
+    @Override
+    public void guardar(Evento evento) {
+        em.persist(evento);
+    }
 }
 
