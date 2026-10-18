@@ -42,5 +42,11 @@ public class IngestaEventos {
     private final AdaptadorJsonPush adaptador;
 
     private final IngestoresEventos ingestores;
+
+    public IngestaEventos(AlmacenEventos almacen, AdaptadorJsonPush adaptador, IngestoresEventos ingestores) {
+        this.almacen = almacen;
+        this.adaptador = adaptador;
+        this.ingestores = ingestores;
+    }
 }
 
