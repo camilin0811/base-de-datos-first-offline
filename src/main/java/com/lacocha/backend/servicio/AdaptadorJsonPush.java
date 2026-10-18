@@ -27,5 +27,11 @@ import jakarta.validation.Validator;
 @Component
 public class AdaptadorJsonPush {
     /** Un evento que no se puede guardar. Se rechaza solo; el resto del push sigue. */
+
+    public static class EventoInvalido extends Exception {
+        public EventoInvalido(String mensaje) {
+            super(mensaje);
+        }
+    }
 }
 
