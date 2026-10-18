@@ -36,14 +36,11 @@ import com.lacocha.backend.dto.Sync.PushRespuesta;
  */
 @Service
 public class PisciculturaFacade {
+
     private final CatalogoService catalogo;
-
     private final ConsultaService consultas;
-
     private final SyncService sync;
-
     private final DispositivoService dispositivos;
-
     private final ParametroService parametros;
 
     public PisciculturaFacade(CatalogoService catalogo, ConsultaService consultas, SyncService sync,
@@ -88,7 +85,6 @@ public class PisciculturaFacade {
     }
 
     /** Lo que el sistema experto saca de los eventos de un lote. */
-
     public ResumenLote resumenLote(UUID loteId) {
         return consultas.resumenLote(loteId);
     }
@@ -122,5 +118,10 @@ public class PisciculturaFacade {
     public List<SincronizacionSalida> sincronizaciones(String dispositivoId) {
         return dispositivos.sincronizaciones(dispositivoId);
     }
-}
 
+    // ---------- Parámetros del sistema experto ----------
+
+    public ParametrosSalida parametros() {
+        return parametros.parametros();
+    }
+}
