@@ -30,5 +30,7 @@ import com.lacocha.backend.servicio.DecoradoresAlmacenEventos.Rastro;
 @Component
 public class IngestaEventos {
     private static final Logger log = LoggerFactory.getLogger(IngestaEventos.class);
+
+    /** Lo que produjeron los eventos de un push. */
 }
 
