@@ -45,5 +45,7 @@ public class AdaptadorJsonPush {
         this.validator = validator;
         this.ingestores = ingestores;
     }
+
+    /** Trama cruda -> evento tipado, con sus anotaciones y las reglas que no caben en una. */
 }
 
