@@ -101,5 +101,7 @@ class IngestaEventosTest {
     private final IngestaEventos ingesta = new IngestaEventos(almacen,
             new AdaptadorJsonPush(mapper, Validation.buildDefaultValidatorFactory().getValidator(), ingestores),
             ingestores);
+
+    private static final Instant SERVIDOR_EN = Instant.parse("2026-10-18T21:00:00Z");
 }
 
