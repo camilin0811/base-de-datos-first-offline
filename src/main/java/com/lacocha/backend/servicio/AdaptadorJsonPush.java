@@ -100,5 +100,7 @@ public class AdaptadorJsonPush {
         }
         return "evento";
     }
+
+    /** Los nombres de los campos del record están en camelCase y el JSON en snake_case. */
 }
 
