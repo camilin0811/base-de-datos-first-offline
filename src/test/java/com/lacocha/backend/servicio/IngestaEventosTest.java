@@ -195,5 +195,16 @@ class IngestaEventosTest {
         assertThat(ingerir(negativo).rechazados()).singleElement()
                 .satisfies(rechazo -> assertThat(rechazo.error()).startsWith("total:"));
     }
+
+    @Test
+    void unTipoDesconocidoListaLosQueElServidorAcepta() {
+        JsonNode desconocido = json("""
+                {"tipo":"caudal","id":"%s","registrado_en":"%s"}
+                """.formatted(UUID.randomUUID(), REGISTRADO_EN));
+
+        assertThat(ingerir(desconocido).rechazados()).singleElement()
+                .satisfies(rechazo -> assertThat(rechazo.error())
+                        .isEqualTo("tipo: debe ser uno de lectura_agua, conteo, mortalidad, alimentacion, biometria"));
+    }
 }
 
