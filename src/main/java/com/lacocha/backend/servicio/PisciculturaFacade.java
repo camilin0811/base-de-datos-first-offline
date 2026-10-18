@@ -60,5 +60,9 @@ public class PisciculturaFacade {
     public List<EstanqueSalida> listarEstanques() {
         return catalogo.listarEstanques();
     }
+
+    public EstanqueSalida crearEstanque(EstanqueCrear datos) {
+        return catalogo.crearEstanque(datos);
+    }
 }
 
