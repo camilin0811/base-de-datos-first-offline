@@ -86,5 +86,7 @@ public class PisciculturaFacade {
     public List<LecturaAguaSalida> lecturasEstanque(UUID estanqueId, Instant desde, Instant hasta, int limite) {
         return consultas.lecturasEstanque(estanqueId, desde, hasta, limite);
     }
+
+    /** Lo que el sistema experto saca de los eventos de un lote. */
 }
 
