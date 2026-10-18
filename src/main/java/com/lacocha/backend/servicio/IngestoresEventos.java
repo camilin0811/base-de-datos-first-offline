@@ -154,5 +154,7 @@ public class IngestoresEventos {
         porTipo.put(fabrica.tipo(), fabrica);
         porClase.put(fabrica.claseEntrada(), fabrica);
     }
+
+    /** null cuando el dispositivo mandó un "tipo" que este servidor no conoce. */
 }
 
