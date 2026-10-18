@@ -68,5 +68,7 @@ class IngestaEventosTest {
             return candidatas.size();
         }
     }
+
+    /** Umbral fijo: esta prueba es de la tubería, no de qué es buena agua para una trucha. */
 }
 
