@@ -107,5 +107,7 @@ class IngestaEventosTest {
     private static final String REGISTRADO_EN = "2026-10-18T15:30:00-05:00";
 
     private final UUID loteId = UUID.randomUUID();
+
+    private final UUID estanqueId = UUID.randomUUID();
 }
 
