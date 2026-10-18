@@ -26,8 +26,8 @@ import jakarta.validation.Validator;
  */
 @Component
 public class AdaptadorJsonPush {
-    /** Un evento que no se puede guardar. Se rechaza solo; el resto del push sigue. */
 
+    /** Un evento que no se puede guardar. Se rechaza solo; el resto del push sigue. */
     public static class EventoInvalido extends Exception {
         public EventoInvalido(String mensaje) {
             super(mensaje);
@@ -35,9 +35,7 @@ public class AdaptadorJsonPush {
     }
 
     private final ObjectMapper mapper;
-
     private final Validator validator;
-
     private final IngestoresEventos ingestores;
 
     public AdaptadorJsonPush(ObjectMapper mapper, Validator validator, IngestoresEventos ingestores) {
@@ -47,7 +45,6 @@ public class AdaptadorJsonPush {
     }
 
     /** Trama cruda -> evento tipado, con sus anotaciones y las reglas que no caben en una. */
-
     public Entrada leerEvento(JsonNode crudo) throws EventoInvalido {
         if (crudo == null || !crudo.isObject()) {
             throw new EventoInvalido("el evento debe ser un objeto JSON");
@@ -84,13 +81,11 @@ public class AdaptadorJsonPush {
     }
 
     /** El id de una trama que no se pudo ni leer, para que el celular igual sepa cuál fue. */
-
     public static String idCrudo(JsonNode crudo) {
         return crudo != null && crudo.hasNonNull("id") ? crudo.get("id").asText() : null;
     }
 
     /** Jackson ya reporta la ruta con los nombres del JSON. */
-
     private static String campoConError(JsonProcessingException ex) {
         if (ex instanceof MismatchedInputException m && !m.getPath().isEmpty()) {
             String campo = m.getPath().get(m.getPath().size() - 1).getFieldName();
@@ -102,5 +97,7 @@ public class AdaptadorJsonPush {
     }
 
     /** Los nombres de los campos del record están en camelCase y el JSON en snake_case. */
+    private static String aSnake(String camel) {
+        return camel.replaceAll("([a-z0-9])([A-Z])", "$1_$2").toLowerCase();
+    }
 }
-
