@@ -20,5 +20,7 @@ public interface AlmacenEventos {
     boolean existe(Evento evento);
 
     void guardar(Evento evento);
+
+    /** El estanque (lecturas de agua) o el lote (los demás) al que apunta el evento. */
 }
 
