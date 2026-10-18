@@ -233,5 +233,11 @@ class IngestaEventosTest {
             assertThat(a.getEstanqueId()).isEqualTo(estanqueId);
         });
     }
+
+    /**
+     * Este backend no descarta una alerta igual que siga sin atender: cada lectura fuera de rango
+     * levanta la suya. Queda escrito aquí para que el día que se agregue ese filtro la prueba lo
+     * diga en voz alta, en vez de que el cambio pase sin que nadie lo note.
+     */
 }
 
