@@ -24,8 +24,8 @@ import com.lacocha.backend.modelo.Alerta;
  */
 @Component
 public class IngestoresEventos {
-    /** Lo que dispara una clase de evento una vez guardada. Devuelve cuántas alertas creó. */
 
+    /** Lo que dispara una clase de evento una vez guardada. Devuelve cuántas alertas creó. */
     public interface Ingestor {
         int despuesDeGuardar(Entrada evento, AlmacenEventos almacen);
     }
@@ -33,10 +33,8 @@ public class IngestoresEventos {
     /**
      * Método fábrica: cada subclase responde por un "tipo" del protocolo y decide qué ingestor lo
      * atiende. Aceptar una clase nueva de evento es agregar una subclase y registrarla más abajo;
-
      * el adaptador, la tubería y los controladores no cambian.
      */
-
     public abstract static class Fabrica {
 
         private Ingestor cache;
@@ -60,7 +58,6 @@ public class IngestoresEventos {
     }
 
     /** Los eventos que solo se guardan: conteo, mortalidad, alimentación y biometría. */
-
     public static final class Llano extends Fabrica {
 
         private final String tipo;
@@ -92,7 +89,6 @@ public class IngestoresEventos {
      * misma transacción que guardó la lectura: si no, un push que se revierte dejaría una alerta
      * apuntando a una lectura que nadie tiene.
      */
-
     public static final class LecturasAgua extends Fabrica {
 
         private final Reglas reglas;
@@ -137,9 +133,7 @@ public class IngestoresEventos {
     }
 
     /** LinkedHashMap para que el mensaje de error liste las etiquetas siempre en el mismo orden. */
-
     private final Map<String, Fabrica> porTipo = new LinkedHashMap<>();
-
     private final Map<Class<? extends Entrada>, Fabrica> porClase = new LinkedHashMap<>();
 
     public IngestoresEventos(Reglas reglas) {
@@ -156,7 +150,6 @@ public class IngestoresEventos {
     }
 
     /** null cuando el dispositivo mandó un "tipo" que este servidor no conoce. */
-
     public Class<? extends Entrada> claseEntrada(String tipo) {
         Fabrica fabrica = porTipo.get(tipo);
         return fabrica != null ? fabrica.claseEntrada() : null;
@@ -165,5 +158,8 @@ public class IngestoresEventos {
     public Set<String> tipos() {
         return porTipo.keySet();
     }
-}
 
+    public Ingestor para(Entrada evento) {
+        return porClase.get(evento.getClass()).ingestor();
+    }
+}
