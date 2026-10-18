@@ -135,5 +135,23 @@ class IngestaEventosTest {
     private IngestaEventos.Resultado ingerir(JsonNode... tramas) {
         return ingesta.ingerir(List.of(tramas), "cel-prueba", SERVIDOR_EN);
     }
+
+    @Test
+    void aceptaUnConteoYLoSellaConElDispositivoYLaHoraDeLlegada() {
+        almacen.padres.add(loteId);
+        UUID id = UUID.randomUUID();
+
+        IngestaEventos.Resultado r = ingerir(conteo(id, 1200));
+
+        assertThat(r.aceptados()).containsExactly(id);
+        assertThat(r.rechazados()).isEmpty();
+        Conteo guardado = (Conteo) almacen.guardados.values().iterator().next();
+        assertThat(guardado.getTotal()).isEqualTo(1200);
+        assertThat(guardado.getCortesMultiples()).isEqualTo(2);
+        assertThat(guardado.getOrigen()).isEqualTo("contador");
+        assertThat(guardado.getDispositivoId()).isEqualTo("cel-prueba");
+        assertThat(guardado.getRecibidoEn()).isEqualTo(SERVIDOR_EN);
+        assertThat(guardado.getRegistradoEn()).isEqualTo(OffsetDateTime.parse(REGISTRADO_EN).toInstant());
+    }
 }
 
