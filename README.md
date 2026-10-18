@@ -40,6 +40,25 @@ en esas costuras, no de adorno. Hoy ese método tiene 21 líneas.
 Los decoradores se construyen en cada push, no una sola vez: una cuenta por `origen` que sumara dos
 pushes distintos no diría nada.
 
+## Pruebas automáticas
+
+```powershell
+.\mvnw test
+```
+
+`ApiTest` recorre la API completa contra H2 en memoria. `IngestaEventosTest` prueba las reglas del
+push **sin base de datos y sin contexto de Spring**: el `AlmacenEventos` es un mapa. Eso es lo que
+compra el Bridge. Cubre que un conteo se acepta con su dispositivo y su hora de llegada, que el
+mismo evento dos veces vuelve como duplicado y se guarda una sola vez, que un evento huérfano se
+rechaza solo y el resto de la cola pasa, que el error nombra el campo como el JSON, que sin
+`origen` se guarda como `manual`, que una lectura fuera de rango levanta alerta y que un conteo
+nunca la levanta. Tarda milisegundos; el mismo terreno por HTTP cuesta levantar la aplicación.
+
+Una de esas pruebas deja escrito algo que hoy es verdad: **este backend no descarta una alerta igual
+que siga sin atender**, así que cada lectura fuera de rango levanta la suya. El sensor mide cada
+pocos segundos, así que vale la pena decidir si eso se queda así; si algún día se agrega el filtro,
+la prueba lo dirá en voz alta en vez de que el cambio pase inadvertido.
+
 ## Correr en local
 
 No hace falta Neon: en local usa una base H2 en la carpeta `data/`.
