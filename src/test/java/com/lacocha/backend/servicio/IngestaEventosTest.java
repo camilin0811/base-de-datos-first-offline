@@ -81,5 +81,11 @@ class IngestaEventosTest {
                     "Temperatura alta: " + tempC + " °C (óptimo 10–16 °C)"));
         }
     };
+
+    /**
+     * Configurado como el que Spring Boot le entrega a la aplicación: la misma estrategia de
+     * nombres que fija application.properties (sin ella "temp_c" no mapearía) y las propiedades
+     * desconocidas ignoradas, porque cada trama trae un campo "tipo" que ningún record declara.
+     */
 }
 
