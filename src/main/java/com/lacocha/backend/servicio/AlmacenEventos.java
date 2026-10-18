@@ -24,5 +24,7 @@ public interface AlmacenEventos {
     /** El estanque (lecturas de agua) o el lote (los demás) al que apunta el evento. */
 
     boolean existePadre(boolean padreEsEstanque, UUID padreId);
+
+    /** Guarda las alertas que levantó el sistema experto y devuelve cuántas quedaron. */
 }
 
