@@ -97,5 +97,9 @@ class IngestaEventosTest {
     private final AlmacenEnMemoria almacen = new AlmacenEnMemoria();
 
     private final IngestoresEventos ingestores = new IngestoresEventos(REGLAS);
+
+    private final IngestaEventos ingesta = new IngestaEventos(almacen,
+            new AdaptadorJsonPush(mapper, Validation.buildDefaultValidatorFactory().getValidator(), ingestores),
+            ingestores);
 }
 
