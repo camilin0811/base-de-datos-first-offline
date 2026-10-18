@@ -96,5 +96,9 @@ public class PisciculturaFacade {
     public List<AlertaSalida> listarAlertas(boolean pendientes, UUID estanqueId, int limite) {
         return consultas.listarAlertas(pendientes, estanqueId, limite);
     }
+
+    public AlertaSalida atenderAlerta(UUID id, String quien) {
+        return consultas.atenderAlerta(id, quien);
+    }
 }
 
