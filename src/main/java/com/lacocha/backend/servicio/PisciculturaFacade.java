@@ -37,5 +37,7 @@ import com.lacocha.backend.dto.Sync.PushRespuesta;
 @Service
 public class PisciculturaFacade {
     private final CatalogoService catalogo;
+
+    private final ConsultaService consultas;
 }
 
