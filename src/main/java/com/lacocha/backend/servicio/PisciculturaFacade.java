@@ -41,5 +41,7 @@ public class PisciculturaFacade {
     private final ConsultaService consultas;
 
     private final SyncService sync;
+
+    private final DispositivoService dispositivos;
 }
 
