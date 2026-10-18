@@ -34,8 +34,8 @@ import jakarta.validation.Validation;
  * recorrido por HTTP en ApiTest cuesta levantar la aplicación y el esquema de H2.
  */
 class IngestaEventosTest {
-    /** Implementador del Bridge para las pruebas. */
 
+    /** Implementador del Bridge para las pruebas. */
     static final class AlmacenEnMemoria implements AlmacenEventos {
 
         final Map<String, Evento> guardados = new LinkedHashMap<>();
@@ -70,7 +70,6 @@ class IngestaEventosTest {
     }
 
     /** Umbral fijo: esta prueba es de la tubería, no de qué es buena agua para una trucha. */
-
     private static final Reglas REGLAS = new Reglas(null, null, null) {
         @Override
         public List<Resultado> evaluarLectura(Double tempC, Double ph, Double oxigenoMgL) {
@@ -87,7 +86,6 @@ class IngestaEventosTest {
      * nombres que fija application.properties (sin ella "temp_c" no mapearía) y las propiedades
      * desconocidas ignoradas, porque cada trama trae un campo "tipo" que ningún record declara.
      */
-
     private final ObjectMapper mapper = JsonMapper.builder()
             .addModule(new JavaTimeModule())
             .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
@@ -95,19 +93,15 @@ class IngestaEventosTest {
             .build();
 
     private final AlmacenEnMemoria almacen = new AlmacenEnMemoria();
-
     private final IngestoresEventos ingestores = new IngestoresEventos(REGLAS);
-
     private final IngestaEventos ingesta = new IngestaEventos(almacen,
             new AdaptadorJsonPush(mapper, Validation.buildDefaultValidatorFactory().getValidator(), ingestores),
             ingestores);
 
     private static final Instant SERVIDOR_EN = Instant.parse("2026-10-18T21:00:00Z");
-
     private static final String REGISTRADO_EN = "2026-10-18T15:30:00-05:00";
 
     private final UUID loteId = UUID.randomUUID();
-
     private final UUID estanqueId = UUID.randomUUID();
 
     private JsonNode json(String crudo) {
@@ -239,7 +233,6 @@ class IngestaEventosTest {
      * levanta la suya. Queda escrito aquí para que el día que se agregue ese filtro la prueba lo
      * diga en voz alta, en vez de que el cambio pase sin que nadie lo note.
      */
-
     @Test
     void dosLecturasFueraDeRangoLevantanDosAlertas() {
         almacen.padres.add(estanqueId);
@@ -249,5 +242,15 @@ class IngestaEventosTest {
 
         assertThat(almacen.alertas).hasSize(2);
     }
-}
 
+    @Test
+    void unConteoNuncaLevantaAlertas() {
+        almacen.padres.add(loteId);
+
+        IngestaEventos.Resultado r = ingerir(conteo(UUID.randomUUID(), 999_999));
+
+        assertThat(r.aceptados()).hasSize(1);
+        assertThat(r.alertasGeneradas()).isZero();
+        assertThat(almacen.alertas).isEmpty();
+    }
+}
