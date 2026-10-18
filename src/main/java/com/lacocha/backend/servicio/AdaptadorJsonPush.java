@@ -90,5 +90,15 @@ public class AdaptadorJsonPush {
     }
 
     /** Jackson ya reporta la ruta con los nombres del JSON. */
+
+    private static String campoConError(JsonProcessingException ex) {
+        if (ex instanceof MismatchedInputException m && !m.getPath().isEmpty()) {
+            String campo = m.getPath().get(m.getPath().size() - 1).getFieldName();
+            if (campo != null) {
+                return campo;
+            }
+        }
+        return "evento";
+    }
 }
 
