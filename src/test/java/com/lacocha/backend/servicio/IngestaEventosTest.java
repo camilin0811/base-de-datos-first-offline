@@ -109,5 +109,13 @@ class IngestaEventosTest {
     private final UUID loteId = UUID.randomUUID();
 
     private final UUID estanqueId = UUID.randomUUID();
+
+    private JsonNode json(String crudo) {
+        try {
+            return mapper.readTree(crudo);
+        } catch (Exception ex) {
+            throw new IllegalArgumentException(ex);
+        }
+    }
 }
 
