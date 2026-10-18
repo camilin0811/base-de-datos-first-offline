@@ -24,5 +24,11 @@ public class AlmacenEventosJpa implements AlmacenEventos {
     public AlmacenEventosJpa(EntityManager em) {
         this.em = em;
     }
+
+    @Override
+    public boolean existe(Evento evento) {
+        // Cada clase de evento tiene su propia tabla, así que el id se busca solo en la que toca
+        return em.find(evento.getClass(), evento.getId()) != null;
+    }
 }
 
