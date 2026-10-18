@@ -88,5 +88,9 @@ public class PisciculturaFacade {
     }
 
     /** Lo que el sistema experto saca de los eventos de un lote. */
+
+    public ResumenLote resumenLote(UUID loteId) {
+        return consultas.resumenLote(loteId);
+    }
 }
 
