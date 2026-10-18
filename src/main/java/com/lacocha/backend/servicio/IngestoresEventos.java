@@ -92,5 +92,50 @@ public class IngestoresEventos {
      * misma transacción que guardó la lectura: si no, un push que se revierte dejaría una alerta
      * apuntando a una lectura que nadie tiene.
      */
+
+    public static final class LecturasAgua extends Fabrica {
+
+        private final Reglas reglas;
+
+        public LecturasAgua(Reglas reglas) {
+            this.reglas = reglas;
+        }
+
+        @Override
+        public String tipo() {
+            return "lectura_agua";
+        }
+
+        @Override
+        public Class<? extends Entrada> claseEntrada() {
+            return LecturaAguaEntrada.class;
+        }
+
+        @Override
+        protected Ingestor crearIngestor() {
+            return this::levantarAlertas;
+        }
+
+        private int levantarAlertas(Entrada evento, AlmacenEventos almacen) {
+            LecturaAguaEntrada lectura = (LecturaAguaEntrada) evento;
+            List<Alerta> candidatas = new ArrayList<>();
+            for (Reglas.Resultado regla : reglas.evaluarLectura(lectura.tempC(), lectura.ph(),
+                    lectura.oxigenoMgL())) {
+                Alerta alerta = new Alerta();
+                alerta.setEstanqueId(lectura.estanqueId());
+                alerta.setLecturaId(lectura.id());
+                alerta.setDisparadaPor("lectura_agua");
+                alerta.setVariable(regla.variable());
+                alerta.setValor(regla.valor());
+                alerta.setNivel(regla.nivel());
+                alerta.setMensaje(regla.mensaje());
+                alerta.setMedidoEn(lectura.registradoEn().toInstant());
+                candidatas.add(alerta);
+            }
+            return almacen.guardarAlertas(candidatas);
+        }
+    }
+
+    /** LinkedHashMap para que el mensaje de error liste las etiquetas siempre en el mismo orden. */
 }
 
