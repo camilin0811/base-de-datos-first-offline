@@ -37,5 +37,7 @@ public class AdaptadorJsonPush {
     private final ObjectMapper mapper;
 
     private final Validator validator;
+
+    private final IngestoresEventos ingestores;
 }
 
