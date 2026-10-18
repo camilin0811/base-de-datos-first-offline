@@ -47,5 +47,40 @@ public class AdaptadorJsonPush {
     }
 
     /** Trama cruda -> evento tipado, con sus anotaciones y las reglas que no caben en una. */
+
+    public Entrada leerEvento(JsonNode crudo) throws EventoInvalido {
+        if (crudo == null || !crudo.isObject()) {
+            throw new EventoInvalido("el evento debe ser un objeto JSON");
+        }
+        Class<? extends Entrada> clase = ingestores.claseEntrada(crudo.path("tipo").asText(""));
+        if (clase == null) {
+            throw new EventoInvalido("tipo: debe ser uno de " + String.join(", ", ingestores.tipos()));
+        }
+
+        Entrada evento;
+        try {
+            evento = mapper.treeToValue(crudo, clase);
+        } catch (JsonProcessingException ex) {
+            throw new EventoInvalido(campoConError(ex) + ": formato no válido");
+        }
+
+        Set<ConstraintViolation<Entrada>> violaciones = validator.validate(evento);
+        if (!violaciones.isEmpty()) {
+            ConstraintViolation<Entrada> v = violaciones.stream()
+                    .min(Comparator.comparing(x -> x.getPropertyPath().toString()))
+                    .get();
+            throw new EventoInvalido(aSnake(v.getPropertyPath().toString()) + ": " + v.getMessage());
+        }
+
+        String error = Fechas.errorFechaDispositivo(evento.registradoEn());
+        if (error != null) {
+            throw new EventoInvalido("registrado_en: " + error);
+        }
+        error = evento.errorExtra();
+        if (error != null) {
+            throw new EventoInvalido(error);
+        }
+        return evento;
+    }
 }
 
