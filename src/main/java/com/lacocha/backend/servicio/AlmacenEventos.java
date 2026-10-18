@@ -15,16 +15,15 @@ import com.lacocha.backend.modelo.Evento;
  * persistencia sin tocar esas reglas.
  */
 public interface AlmacenEventos {
-    /** true cuando ya hay un evento con ese id: el celular reintentó tras perder la señal. */
 
+    /** true cuando ya hay un evento con ese id: el celular reintentó tras perder la señal. */
     boolean existe(Evento evento);
 
     void guardar(Evento evento);
 
     /** El estanque (lecturas de agua) o el lote (los demás) al que apunta el evento. */
-
     boolean existePadre(boolean padreEsEstanque, UUID padreId);
 
     /** Guarda las alertas que levantó el sistema experto y devuelve cuántas quedaron. */
+    int guardarAlertas(List<Alerta> alertas);
 }
-
