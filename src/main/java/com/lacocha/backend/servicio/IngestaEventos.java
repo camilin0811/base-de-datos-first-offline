@@ -92,5 +92,7 @@ public class IngestaEventos {
         }
         return new Resultado(aceptados, duplicados, rechazados, alertasGeneradas);
     }
+
+    /** El id lo pone el celular (es lo que hace idempotente el push); lo demás lo pone el servidor. */
 }
 
