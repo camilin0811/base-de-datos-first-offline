@@ -184,5 +184,16 @@ class IngestaEventosTest {
             assertThat(rechazo.error()).isEqualTo("lote_id: no existe");
         });
     }
+
+    @Test
+    void elRechazoNombraElCampoComoLoNombraElJson() {
+        almacen.padres.add(loteId);
+        JsonNode negativo = json("""
+                {"tipo":"conteo","id":"%s","registrado_en":"%s","lote_id":"%s","total":-5}
+                """.formatted(UUID.randomUUID(), REGISTRADO_EN, loteId));
+
+        assertThat(ingerir(negativo).rechazados()).singleElement()
+                .satisfies(rechazo -> assertThat(rechazo.error()).startsWith("total:"));
+    }
 }
 
