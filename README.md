@@ -161,6 +161,28 @@ Pasa cuando se edita una migración que ya se aplicó. En desarrollo se arregla 
 (`docker compose down -v`). En producción **no se edita una migración aplicada**: se escribe una
 nueva con el número siguiente.
 
+## Quién usa la app
+
+Hasta la V23 la API se protegía con una sola clave compartida (`X-API-Key`): todos los celulares
+mandaban la misma. Servía para el piloto, pero no dice quién hizo cada cosa y no se le puede quitar
+el acceso a una persona sin cambiársela a toda la finca.
+
+La **V24** agrega dos tablas:
+
+- **`usuarios`** — documento (es lo que la gente de la finca se sabe de memoria; no se pide correo
+  porque varios cuidadores no tienen uno), nombre, el hash BCrypt de la clave y el rol
+  (`cuidador` o `productor`). No se borran: sus registros siguen apuntando ahí, se desactivan.
+- **`sesiones`** — una fila por cada ingreso vivo. Se guarda el **SHA-256 del token**, no el token:
+  una copia de la base no sirve para entrar.
+
+**Por qué una tabla y no un JWT.** Lo que de verdad pasa en esta finca es que se pierde un celular.
+Con la tabla se cierra esa sesión y listo; un token firmado seguiría sirviendo hasta que venza y no
+hay cómo revocarlo.
+
+**Las dos credenciales conviven.** Cualquiera de las dos abre la API: el token de sesión de una
+persona, o la clave compartida que siguen usando el nodo ESP32 y un celular que todavía no ha
+iniciado sesión. Por eso agregar personas no dejó por fuera a los dispositivos que ya sincronizaban.
+
 ## Cómo funciona la sincronización
 
 Todo lo que registra el celular es un **evento** con un `id` (UUID) que genera el propio celular.
