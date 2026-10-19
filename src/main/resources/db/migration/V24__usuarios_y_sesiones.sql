@@ -26,3 +26,26 @@ ALTER TABLE usuarios ADD CONSTRAINT ck_usuarios_rol CHECK (rol IN ('cuidador', '
 
 -- El documento se consulta en cada ingreso y ademas se compara sin distinguir mayusculas.
 CREATE INDEX ix_usuarios_documento ON usuarios (documento);
+
+-- Una fila por cada ingreso que sigue vivo. Se eligio tabla y no un token firmado (JWT) porque
+-- en esta finca lo que de verdad pasa es que se pierde un celular: con la tabla se cierra esa
+-- sesion y ya; un token firmado seguiria sirviendo hasta que venza y no hay como revocarlo.
+CREATE TABLE sesiones (
+    id             UUID PRIMARY KEY,
+    usuario_id     UUID                     NOT NULL REFERENCES usuarios (id),
+    -- Se guarda el SHA-256 del token, no el token. Si alguien se lleva una copia de la base,
+    -- lo que se lleva no sirve para entrar.
+    token_hash     VARCHAR(64)              NOT NULL UNIQUE,
+    -- Desde que aparato se abrio. Deja ver que una persona entro desde un celular prestado.
+    dispositivo_id VARCHAR(64) REFERENCES dispositivos (id),
+    creada_en      TIMESTAMP WITH TIME ZONE NOT NULL,
+    -- La app funciona sin senal, asi que la sesion dura mucho: obligar a entrar cada semana
+    -- dejaria al cuidador por fuera justo en la laguna. El celular la protege con un PIN local.
+    expira_en      TIMESTAMP WITH TIME ZONE NOT NULL,
+    -- Se lleno al cerrar sesion o al darla de baja. No se borra la fila: es la bitacora.
+    cerrada_en     TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX ix_sesiones_usuario ON sesiones (usuario_id, creada_en DESC);
+
+ALTER TABLE sesiones ADD CONSTRAINT ck_sesiones_vigencia CHECK (expira_en > creada_en);
