@@ -127,6 +127,7 @@ se aplican solas al arrancar (Flyway) y están verificadas contra PostgreSQL 16,
 | `tasas_alimentacion` | Qué porcentaje de la biomasa se da por día según el peso del pez |
 | `factores_temperatura` | Cuánto se corrige esa tasa según la temperatura. Sobre 18 °C suspende |
 | `alertas` | Las genera el servidor. Deja quién la atendió y cuándo |
+| `hallazgos_ia` | Lo que encuentra el servicio de análisis. Aparte de `alertas` a propósito: ver abajo |
 
 **Operación**
 
@@ -182,6 +183,47 @@ hay cómo revocarlo.
 **Las dos credenciales conviven.** Cualquiera de las dos abre la API: el token de sesión de una
 persona, o la clave compartida que siguen usando el nodo ESP32 y un celular que todavía no ha
 iniciado sesión. Por eso agregar personas no dejó por fuera a los dispositivos que ya sincronizaban.
+
+## Lo que el umbral no puede ver
+
+El sistema experto de `parametros_rango` compara cada lectura contra un umbral y genera su alerta.
+Eso funciona y no cambia. La **V26** agrega `hallazgos_ia` para los casos en que un umbral fijo, por
+bien afinado que esté, no puede ayudar:
+
+| El caso | Por qué el umbral no lo ve |
+|---|---|
+| El estanque de manantial corre a 11 °C y hoy marcó 15 °C | 15 °C está dentro del rango **óptimo** de la trucha (10–16). El umbral no tiene nada que decir |
+| El oxígeno baja de 8.5 a 6.2 en una semana | Nunca cruzó el mínimo crítico de 5.0. El umbral avisará el día que lo cruce, que es el día en que ya es tarde |
+| Agua tibia con oxígeno justo | Cada valor está en rango. Juntos no: el agua tibia carga menos oxígeno y la trucha en agua tibia consume más |
+| El lote crece la mitad de lo que el agua permite | No es un problema de agua, así que ningún umbral de agua lo detecta |
+
+**Por qué una tabla aparte y no más columnas en `alertas`.** La tabla `alertas` ya creció una vez
+para esto: la V20 le quitó el `NOT NULL` a `lectura_id` y le agregó `lote_id`, justo para que el
+sistema experto pudiera avisar de cosas que no son del agua. Así que la pregunta es legítima. Tres
+razones, y la tercera es la que decide:
+
+1. `ck_alertas_coherente` exige que una alerta de agua traiga su lectura y su variable, y eso es un
+   invariante de verdad: **cada alerta del sistema experto sale de comparar un valor contra un
+   umbral**. Un hallazgo puede salir de la forma de treinta lecturas, de la pendiente de toda una
+   ventana o de dos biometrías y la temperatura entre ellas. Meterlo ahí obliga a relajar ese CHECK
+   para todos, y se pierde la garantía sobre las alertas que sí la cumplían.
+2. Un hallazgo trae `puntaje`, que es la medida que lo disparó, y `alertas` no tiene dónde ponerlo.
+3. **La tesis compara las dos cosas.** La pregunta que tiene que poder responder es cuántas veces la
+   IA vio algo que el umbral no vio, y cuántas avisó de más. Con los dos en la misma tabla esa
+   consulta depende de filtrar por `disparada_por` y de que nadie agregue un valor nuevo sin
+   acordarse; con dos tablas es contar filas. **Lo que se mide se separa.**
+
+Y para el cuidador también son dos cosas distintas: un umbral cruzado es un hecho que verifica
+bajando el sensor otra vez, y un hallazgo del modelo es una sospecha que vale la pena confirmar.
+Presentarlos iguales le quita credibilidad al primero y se la regala al segundo.
+
+Lo que **sí** comparten es el vocabulario de urgencia: `nivel` usa las mismas palabras que `alertas`
+(`advertencia`, `critica`) más `informe`, que es el que agrega el análisis para lo que vale saber
+pero no amerita caminar hasta el estanque.
+
+**Sin servicio de análisis la tabla queda vacía y nada se rompe.** El backend trabaja igual con su
+sistema experto: la IA agrega, no sostiene. Es el mismo criterio que hace que la app funcione en un
+estanque sin señal.
 
 ## Cómo funciona la sincronización
 
