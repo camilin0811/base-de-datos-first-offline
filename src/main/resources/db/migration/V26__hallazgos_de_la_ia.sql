@@ -37,7 +37,7 @@
 -- a quien se le va a mostrar. Un servicio que no conoce los umbrales de esta finca no puede
 -- graduar la urgencia de nada, asi que no lo intenta.
 --
--- El mapeo esta en AiAnalysis.nivelDe(), en una sola funcion para que se pueda leer de corrido.
+-- El mapeo esta en AiAnalysis.levelOf(), en una sola funcion para que se pueda leer de corrido.
 CREATE TABLE hallazgos_ia (
     id          UUID PRIMARY KEY,
     -- Uno de los dos, nunca los dos ni ninguno: los hallazgos del agua son de un estanque y los
